@@ -5,6 +5,8 @@
 	<TITLE>Lukas Folkman</TITLE>
 
 <style>
+ul {list-style-type: circle; padding-left: 30; padding-bottom: 5; margin-top: -10;}
+li span { position: relative; left: 10;}
 a:link {color:#000000;}
 a:visited {color:#000000;}
 a:hover {color:#b33c12;}
@@ -27,7 +29,7 @@ a:active {color:#000000;}
 <td>
 
 	<P>
-	<FONT COLOR="#b33c12" FACE="LMSans10, sans-serif" SIZE=5>
+	<FONT COLOR="#b33c12" FACE="Helvetica, sans-serif" SIZE=5>
 	<B>
 	Lukas Folkman
 	</B>
@@ -35,7 +37,7 @@ a:active {color:#000000;}
 
 	</BR>
 
-	<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="black">
+	<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="black">
 	<I>
 	Postdoctoral Fellow<BR>
 	computational biology
@@ -43,150 +45,190 @@ a:active {color:#000000;}
 	</FONT>
 	</P>
 
-	<table border="0">
-	<tr>
+	<P>
+	<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt">
+	<A HREF="http://www.cemm.at">CeMM Research Center for Molecular Medicine</A>
+	</BR>
+	Austrian Academy of Sciences, Vienna, Austria
+	</FONT>
+	</P>
 
-	<td>
-		<P>
-		<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
-		<B>
-		<A target="_blank" HREF="http://www.cemm.at"><FONT COLOR="#b33c12">CeMM Research Center for Molecular Medicine</FONT></A>
-		</BR>
-		Austrian Academy of Sciences, Vienna, Austria
-		</B>
-		</FONT>
-		</P>
-	</td>
-
-	</tr>
-	</table>
 
 </td>
 </tr>
 </table>
 
-</br>
+
 </br>
 
-<P>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
-<B>
-<A target="_blank" HREF="./cv.pdf"><FONT COLOR="#b33c12">Curriculum Vitae</FONT></A>
-</B>
+<hr>
+<p>
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
+<table>
+<tr>
+<td style="padding-right: 30px;">
+<A HREF="./cv.pdf"><B>Curriculum vitae</B></A>
+</td>
+<td style="padding-right: 30px;">
+<A HREF="#research"><B>Research & profiles</B></A>
+</td>
+<td style="padding-right: 30px;">
+<A HREF="#downloads"><B>Services and downloads</B></A>
+</td>
+<td>
+<A HREF="#publications"><B>Publications</B></A>
+</td>
+</tr>
+</table>
 </FONT>
-</P>
+</p>
+<hr>
 
+
+</br>
+</br>
+
+
+<table>
+<tr>
+
+<td valign="top" style="padding-right: 70px;">
 <P>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
 <B>
-Research interests
+<A id="research">Research</A>
 </B>
 </FONT>		
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
-<UL STYLE="list-style-position: inside; padding: 0; margin-top: -15;">
-<LI>machine learning in computational biology
-<LI>computational epigenomics
-<LI>in-silico drug recommendation and precision medicine
-<LI>prediction of deleterious genetic variants
-<LI>prediction of protein stability changes
-<LI>protein structure prediction
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
+<UL>
+<LI><span>machine learning in computational biology</span></LI>
+<LI><span>computational epigenomics</span></LI>
+<LI><span><I>in silico</I> drug recommendation and precision medicine</span></LI>
+<LI><span>prediction of pathogenic protein variants</span></LI>
+<LI><span>prediction of protein stability changes</span></LI>
+<LI><span>protein structure prediction</span></LI>
 </UL>
 </FONT>
 </P>
+</td>
 
+<td valign="top">
 <P>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
 <B>
-Services and downloads
+<A id="profiles">Profiles</A>
 </B>
 </FONT>
-</BR>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
-<UL STYLE="list-style-position: inside; padding: 0; margin-top: -15;">
-
-<LI><FONT COLOR="#b33c12"><B>KRL</B></FONT></BR>
-<UL STYLE="list-style-position: inside; padding-left: 15; padding-bottom: 5;">
-<LI><A target="_blank" HREF="https://github.com/BorgwardtLab/Kernelized-Rank-Learning">GitHub repository for the kernelized rank learning (KRL) for personalized drug recommendation</A>
-</UL>
-
-<LI><FONT COLOR="#b33c12"><B>DDIG</B></FONT></BR>
-<UL STYLE="list-style-position: inside; padding-left: 15; padding-bottom: 5;">
-<LI><A target="_blank" HREF="http://sparks-lab.org/ddig/">web-server for predicting disease-causing indels, nonsense and synonymous mutations</A>
-</UL>
-
-<LI><FONT COLOR="#b33c12"><B>EASE-MM</B></FONT></BR>
-<UL STYLE="list-style-position: inside; padding-left: 15; padding-bottom: 5;">
-<LI><A target="_blank" HREF="http://sparks-lab.org/server/ease/">web-server for predicting mutation-induced stability changes</A>
-</UL>
-
-<LI><FONT COLOR="#b33c12"><B>EASE-AA</B></FONT></BR>
-<UL STYLE="list-style-position: inside; padding-left: 15; padding-bottom: 5;">
-<LI><A target="_blank" HREF="http://www.ict.griffith.edu.au/bioinf/ease">an older version of my method for predicting mutation-induced stability changes</A>
-</UL>
-
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
+<UL>
+<LI><span><A HREF="http://scholar.google.com.au/citations?user=OmRzTY4AAAAJ">Google Scholar</A></span></LI>
+<LI><span><A HREF="http://orcid.org/0000-0002-5811-8875">ORCID</A></span></LI>
+<LI><span><A HREF="http://www.researchgate.net/profile/Lukas_Folkman">ResearchGate</A></span></LI>
+<LI><span><A HREF="http://twitter.com/LukasFolkman">Twitter</A></span></LI>
+<LI><span><A HREF="http://github.com/lukas-folkman/">GitHub</A></span></LI>
 </UL>
 </FONT>
 </P>
+</td>
 
+</tr>
+</table>
 
+</br>
+
+<table>
+<tr>
+<td>
 <P>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
 <B>
-Publications
+<A id="downloads">Services and downloads</A>
 </B>
 </FONT>
 </BR>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
-<UL STYLE="list-style-position: inside; padding: 0; margin-top: -15;">
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
+<UL>
+<LI><span><FONT COLOR="#b33c12"><B>KRL</B></FONT></BR>
+<A HREF="http://github.com/BorgwardtLab/Kernelized-Rank-Learning">GitHub repository for the kernelized rank learning (KRL) for personalized drug recommendation</A></span></LI>
+<LI><span><FONT COLOR="#b33c12"><B>DDIG</B></FONT></BR>
+<A HREF="http://sparks-lab.org/ddig/">web-server for predicting disease-causing indels, nonsense and synonymous mutations</A></span></LI>
+<LI><span><FONT COLOR="#b33c12"><B>EASE-MM</B></FONT></BR>
+<A HREF="http://sparks-lab.org/server/ease/">web-server for predicting mutation-induced stability changes</A></span></LI>
 
-<LI STYLE="padding-bottom: 5;">He* X, <B>Folkman* L</B> &amp; Borgwardt K (2018) ‘Kernelized rank learning for personalized drug recommendation’, <I>Bioinformatics</I> 34(16), 2808–2816. [<A HREF="https://doi.org/10.1093/bioinformatics/bty132">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/29528376">PubMed</A>] [<A HREF="https://github.com/BorgwardtLab/Kernelized-Rank-Learning">GitHub (source code and data sets)</A>]
+<LI><span><FONT COLOR="#b33c12"><B>EASE-AA</B></FONT></BR>
+<A HREF="http://www.ict.griffith.edu.au/bioinf/ease">an older version of my method for predicting mutation-induced stability changes</A></span></LI>
+</UL>
+</FONT>
+</P>
+</td>
+</tr>
+</table>
 
-<LI STYLE="padding-bottom: 5;">Livingstone* M, <B>Folkman* L</B>, Yang Y, Zhang P, Mort M, Cooper DN, Liu Y, Stantic B &amp; Zhou Y (2017), ‘Investigating 	DNA-, RNA-, and protein-based features as a means to discriminate pathogenic synonymous variants’,
-<I>Human Mutation</I> 38(10), 1336–1347. [<A HREF="https://doi.org/10.1002/humu.23283">article</A>] [<A href="http://sparks-lab.org/index.php/Main/Publications">preprint</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/28649752">PubMed</A>] [<A HREF="http://sparks-lab.org/ddig/">web-server and datasets</A>]
+</br>
 
-<LI STYLE="padding-bottom: 5;"><B>Folkman L</B>, Stantic B, Sattar A &amp; Zhou Y (2016) ‘EASE-MM: sequence-based prediction of mutation-induced stability changes with feature-based multiple models’, <I>Journal of Molecular Biology</I>, 428(6), 1394–1405. [<A href="https://dx.doi.org/10.1016/j.jmb.2016.01.012">article</A>] [<A href="http://sparks-lab.org/index.php/Main/Publications">preprint</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/26804571">PubMed</A>] [<A HREF="http://sparks-lab.org/server/ease/">web-server and datasets</A>].
+<table>
+<tr>
+<td>
+<P>
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
+<B>
+<A id="publications">Publications</A>
+</B>
+</FONT>
+</BR>
+<FONT FACE="Helvetica, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
+<UL>
 
-<LI STYLE="padding-bottom: 5;"><B>Folkman L</B>, Yang Y, Li Z, Stantic B, Sattar B, Mort M, Cooper DN, Liu Y &amp; Zhou Y (2015), ‘DDIG-in: detecting disease-causing genetic variations due to frameshifting indels and nonsense mutations by sequence and structural properties at nucleotide and protein levels’,
-<I>Bioinformatics</I> 31(10), 1599–1606. [<A HREF="https://dx.doi.org/10.1093/bioinformatics/btu862">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/25573915">PubMed</A>] [<A HREF="http://sparks-lab.org/ddig/">web-server and datasets</A>]
+<LI STYLE="padding-bottom: 20;"><span>
+He* X, <B>Folkman* L</B> &amp; Borgwardt K (2018)</BR>
+<B>Kernelized rank learning for personalized drug recommendation</B></BR>
+<I>Bioinformatics</I> 34(16), 2808–2816</BR>
+[<A HREF="http://doi.org/10.1093/bioinformatics/bty132">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/29528376">PubMed</A>] [<A HREF="http://github.com/BorgwardtLab/Kernelized-Rank-Learning">GitHub (source code and data sets)</A>]</span></LI>
 
-<LI STYLE="padding-bottom: 5;"><B>Folkman L</B>, Stantic B &amp; Sattar A (2014), ‘Feature-based multiple models improve classification of mutation-induced stability changes’, <I>BMC Genomics</I>
-15(Suppl 4), S6. [<A HREF="https://dx.doi.org/10.1186/1471-2164-15-S4-S6">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/25057118">PubMed</A>] [<A HREF="http://www.ict.griffith.edu.au/bioinf/ease/index.html#ease_mm">source code and data sets</A>]
+<LI STYLE="padding-bottom: 20;"><span>
+Livingstone* M, <B>Folkman* L</B>, Yang Y, Zhang P, Mort M, Cooper DN, Liu Y, Stantic B &amp; Zhou Y (2017)</BR>
+<B>Investigating DNA-, RNA-, and protein-based features as a means to discriminate pathogenic synonymous variants</B></BR>
+<I>Human Mutation</I> 38(10), 1336–1347</BR>
+[<A HREF="http://doi.org/10.1002/humu.23283">article</A>] [<A href="http://sparks-lab.org/index.php/Main/Publications">preprint</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/28649752">PubMed</A>] [<A HREF="http://sparks-lab.org/ddig/">web-server and datasets</A>]</span></LI>
 
-<LI STYLE="padding-bottom: 5;"><B>Folkman L</B>, Stantic B &amp; Sattar A (2014), ‘Towards sequence-based prediction of mutation-induced stability changes in unseen non-homologous proteins’, <I>BMC Genomics</I>
-15(Suppl 1), S4. [<A HREF="https://dx.doi.org/10.1186/1471-2164-15-S1-S4">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/24564514">PubMed</A>] [<A HREF="http://www.ict.griffith.edu.au/bioinf/ease/index.html#ease_aa">source code and data sets</A>]
+<LI STYLE="padding-bottom: 20;"><span>
+<B>Folkman L</B>, Stantic B, Sattar A &amp; Zhou Y (2016)</BR>
+<B>EASE-MM: sequence-based prediction of mutation-induced stability changes with feature-based multiple models</B></BR>
+<I>Journal of Molecular Biology</I>, 428(6), 1394–1405</BR>
+[<A href="http://dx.doi.org/10.1016/j.jmb.2016.01.012">article</A>] [<A href="http://sparks-lab.org/index.php/Main/Publications">preprint</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/26804571">PubMed</A>] [<A HREF="http://sparks-lab.org/server/ease/">web-server and datasets</A>]</span></LI>
 
-<LI STYLE="padding-bottom: 5;"><B>Folkman L</B>, Stantic B &amp; Sattar A (2013), ‘Sequence-only evolutionary and predicted structural features for the prediction of stability changes in protein mutants’,
-<I>BMC Bioinformatics</I> 14(Suppl 2), S6. [<A HREF="https://dx.doi.org/10.1186/1471-2105-14-S2-S6">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/23369338">PubMed</A>]
+<LI STYLE="padding-bottom: 20;"><span>
+<B>Folkman L</B>, Yang Y, Li Z, Stantic B, Sattar B, Mort M, Cooper DN, Liu Y &amp; Zhou Y (2015)</BR>
+<B>DDIG-in: detecting disease-causing genetic variations due to frameshifting indels and nonsense mutations by sequence and structural properties at nucleotide and protein levels</B></BR>
+<I>Bioinformatics</I> 31(10), 1599–1606</BR>
+[<A HREF="http://dx.doi.org/10.1093/bioinformatics/btu862">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/25573915">PubMed</A>] [<A HREF="http://sparks-lab.org/ddig/">web-server and datasets</A>]</span></LI>
 
-<LI STYLE="padding-bottom: 5;">Higgs T, <B>Folkman L</B> & Stantic B (2013), Combining protein fragment feature-based resampling and local optimisation, <I>in</I> ‘Pattern Recognition in Bioinformatics’, Vol. 7986 of <I>Lecture Notes in Bioinformatics</I>, Springer, pp. 114–125.
+<LI STYLE="padding-bottom: 20;"><span>
+<B>Folkman L</B>, Stantic B &amp; Sattar A (2014)</BR>
+<B>Feature-based multiple models improve classification of mutation-induced stability changes</B></BR>
+<I>BMC Genomics</I> 15(Suppl 4), S6</BR>
+[<A HREF="http://dx.doi.org/10.1186/1471-2164-15-S4-S6">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/25057118">PubMed</A>] [<A HREF="http://www.ict.griffith.edu.au/bioinf/ease/index.html#ease_mm">source code and data sets</A>]</span></LI>
 
-<LI STYLE="padding-bottom: 5;"><B>Folkman L</B>, Pullan W &amp; Stantic B (2011), Generic parallel genetic algorithm framework for protein optimisation, <I>in</I> ‘Algorithms and architectures for parallel processing’, Vol. 7017 of <I>Lecture Notes in Computer Science</I>, Springer, pp. 64–73.
+<LI STYLE="padding-bottom: 20;"><span>
+<B>Folkman L</B>, Stantic B &amp; Sattar A (2014)</BR>
+<B>Towards sequence-based prediction of mutation-induced stability changes in unseen non-homologous proteins</B></BR>
+<I>BMC Genomics</I> 15(Suppl 1), S4</BR>
+[<A HREF="http://dx.doi.org/10.1186/1471-2164-15-S1-S4">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/24564514">PubMed</A>] [<A HREF="http://www.ict.griffith.edu.au/bioinf/ease/index.html#ease_aa">source code and data sets</A>]</span></LI>
 
-<LI STYLE="padding-bottom: 5;">Stetsko A, <B>Folkman L</B> &amp; Matyas V (2010): Neighbor-based intrusion detection in wireless sensor networks, <I>in</I> ‘Wireless and Mobile Communications (ICWMC), 2010 6th
-International Conference on’, IEEE, pp. 420–425.
+<LI><span>
+<B>Folkman L</B>, Stantic B &amp; Sattar A (2013)</BR>
+<B>Sequence-only evolutionary and predicted structural features for the prediction of stability changes in protein mutants</B></BR>
+<I>BMC Bioinformatics</I> 14(Suppl 2), S6</BR>
+[<A HREF="http://dx.doi.org/10.1186/1471-2105-14-S2-S6">open access</A>] [<A HREF="http://www.ncbi.nlm.nih.gov/pubmed/23369338">PubMed</A>]</span></LI>
 
 </UL>
-
 <B>*</B> <I>denotes equal contributions</I>
 </FONT>
 </P>
+</td>
+</tr>
+</table>
 
-<P>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#b33c12">
-<B>
-Profiles
-</B>
-</FONT>
-</BR>
-<FONT FACE="LMSans10, sans-serif" STYLE="font-size: 12pt" COLOR="#000000">
-<UL STYLE="list-style-position: inside; padding: 0; margin-top: -15;">
-<LI><A HREF="http://scholar.google.com.au/citations?user=OmRzTY4AAAAJ">Google Scholar</A>
-<LI><A HREF="http://orcid.org/0000-0002-5811-8875">ORCID</A>
-<LI><A HREF="http://www.researchgate.net/profile/Lukas_Folkman">ResearchGate</A>
-<LI><A HREF="http://twitter.com/LukasFolkman">Twitter</A>
-</UL>
-</FONT>
-</P>
 
 </BODY>
 </HTML>
