@@ -39,7 +39,6 @@
     <!-- Desktop nav -->
     <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
       <a href="#top" class="text-gray-600 hover:text-brand transition-colors">About me</a>
-      <a href="#contact" class="text-gray-600 hover:text-brand transition-colors">Contact</a>
       <a href="#research" class="text-gray-600 hover:text-brand transition-colors">Research</a>
       <a href="#profiles" class="text-gray-600 hover:text-brand transition-colors">Profiles</a>
       <a href="#projects" class="text-gray-600 hover:text-brand transition-colors">Projects</a>
@@ -60,7 +59,6 @@
   <div id="nav-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
     <div class="max-w-7xl mx-auto px-4 py-2 flex flex-col gap-1 text-sm font-medium">
       <a href="#top" class="py-2 text-gray-700 hover:text-brand">About me</a>
-      <a href="#contact" class="py-2 text-gray-700 hover:text-brand">Contact</a>
       <a href="#research" class="py-2 text-gray-700 hover:text-brand">Research</a>
       <a href="#profiles" class="py-2 text-gray-700 hover:text-brand">Profiles</a>
       <a href="#projects" class="py-2 text-gray-700 hover:text-brand">Projects</a>
@@ -96,7 +94,7 @@
 <section id="about" class="bg-gray-50 py-10">
   <div class="max-w-7xl mx-auto px-4">
     <h2 class="text-xl font-semibold text-brand mb-4">About me</h2>
-    <p class="text-gray-700 leading-relaxed text-sm max-w-3xl">
+    <p class="text-gray-700 leading-relaxed text-sm">
       I am a computer scientist with research interests in developing machine learning
       methods for the life sciences. I earned my PhD from the
       <a href="https://www.griffith.edu.au/institute-integrated-intelligent-systems" target="_blank" class="text-brand hover:underline transition-colors">Institute for Integrated and Intelligent Systems</a>,
@@ -123,18 +121,12 @@
   </div>
 </section>
 
-<!-- Contact + Research + Profiles -->
+<!-- Research + Profiles -->
 <section class="max-w-7xl mx-auto px-4 py-10">
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-    <div id="contact">
-      <h2 class="text-xl font-semibold text-brand mb-3">Contact</h2>
-      <img src="img/email.png" alt="E-mail address"
-           class="h-auto" style="max-width: 192px;">
-    </div>
-
-    <div id="research">
-      <h2 class="text-xl font-semibold text-brand mb-3">Research</h2>
+    <div>
+      <h2 id="research" class="text-xl font-semibold text-brand mb-3">Research</h2>
       <ul class="space-y-2 text-sm text-gray-700">
         <li class="flex items-start gap-2">
           <span class="text-brand mt-0.5 flex-shrink-0">▸</span>
@@ -151,8 +143,8 @@
       </ul>
     </div>
 
-    <div id="profiles">
-      <h2 class="text-xl font-semibold text-brand mb-3">Profiles</h2>
+    <div>
+      <h2 id="profiles" class="text-xl font-semibold text-brand mb-3">Profiles</h2>
       <ul class="space-y-2 text-sm">
         <li><a href="https://researchportal.scu.edu.au/esploro/profile/lukas_folkman" target="_blank" class="text-gray-700 hover:text-brand hover:underline transition-colors">Southern Cross University</a></li>
         <li><a href="https://scholar.google.at/citations?user=xHGxvNYAAAAJ" target="_blank" class="text-gray-700 hover:text-brand hover:underline transition-colors">Google Scholar</a></li>
@@ -165,9 +157,9 @@
 </section>
 
 <!-- Projects -->
-<section id="projects" class="bg-gray-50 py-10">
+<section class="bg-gray-50 py-10">
   <div class="max-w-7xl mx-auto px-4">
-    <h2 class="text-xl font-semibold text-brand mb-6">Projects</h2>
+    <h2 id="projects" class="text-xl font-semibold text-brand mb-6">Projects</h2>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -273,9 +265,9 @@
 </section>
 
 <!-- Publications -->
-<section id="publications" class="max-w-7xl mx-auto px-4 py-10">
-  <h2 class="text-xl font-semibold text-brand mb-2">Publications</h2>
-  <p class="text-xs text-gray-500 mb-6">
+<section class="max-w-7xl mx-auto px-4 py-10">
+  <h2 id="publications" class="text-xl font-semibold text-brand mb-2">Publications</h2>
+  <p class="text-sm text-gray-500 mb-6">
     <sup>#</sup> equal contributions &nbsp;&nbsp; <sup>*</sup> senior author(s)
   </p>
   <ol class="space-y-6 text-sm">
