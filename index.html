@@ -208,6 +208,7 @@
           <ul class="mt-auto space-y-1 text-xs text-gray-700">
             <li><a href="https://github.com/epigen/300BCG_analysis" target="_blank" class="hover:text-brand hover:underline transition-colors">Source code on GitHub</a></li>
             <li><a href="http://300BCG.bocklab.org/" target="_blank" class="hover:text-brand hover:underline transition-colors">Website</a></li>
+            <li><a href="https://doi.org/10.1016/j.immuni.2023.12.005" target="_blank" class="hover:text-brand hover:underline transition-colors">Publication</a></li>
           </ul>
         </div>
       </article>
@@ -224,6 +225,7 @@
           <ul class="mt-auto space-y-1 text-xs text-gray-700">
             <li><a href="https://github.com/BorgwardtLab/Kernelized-Rank-Learning" target="_blank" class="hover:text-brand hover:underline transition-colors">Source code on GitHub</a></li>
             <li><a href="https://doi.org/10.5281/zenodo.1436548" target="_blank" class="hover:text-brand hover:underline transition-colors">Datasets</a></li>
+            <li><a href="https://doi.org/10.1093/bioinformatics/bty132" target="_blank" class="hover:text-brand hover:underline transition-colors">Publication</a></li>
           </ul>
         </div>
       </article>
@@ -240,6 +242,7 @@
           <ul class="mt-auto space-y-1 text-xs text-gray-700">
             <li><a href="https://sparks-lab.org/ddig/" target="_blank" class="hover:text-brand hover:underline transition-colors">Web server</a></li>
             <li><a href="https://doi.org/10.5281/zenodo.5826302" target="_blank" class="hover:text-brand hover:underline transition-colors">Singularity container</a></li>
+            <li><a href="https://dx.doi.org/10.1093/bioinformatics/btu862" target="_blank" class="hover:text-brand hover:underline transition-colors">Publication</a></li>
           </ul>
         </div>
       </article>
@@ -256,6 +259,7 @@
           <ul class="mt-auto space-y-1 text-xs text-gray-700">
             <li><a href="https://sparks-lab.org/server/ease/" target="_blank" class="hover:text-brand hover:underline transition-colors">Web server</a></li>
             <li><a href="https://doi.org/10.5281/zenodo.5826298" target="_blank" class="hover:text-brand hover:underline transition-colors">Singularity container</a></li>
+            <li><a href="https://dx.doi.org/10.1016/j.jmb.2016.01.012" target="_blank" class="hover:text-brand hover:underline transition-colors">Publication</a></li>
           </ul>
         </div>
       </article>
@@ -557,6 +561,12 @@
   btn.addEventListener('click', () => {
     const isHidden = menu.classList.toggle('hidden');
     btn.setAttribute('aria-expanded', String(!isHidden));
+  });
+  menu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      menu.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    });
   });
 </script>
 
