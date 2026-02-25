@@ -21,22 +21,30 @@
     }
   </script>
   <script async src="https://badge.dimensions.ai/badge.js" charset="utf-8"></script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 72px; /* offset for sticky nav height */
+    }
+  </style>
 </head>
 
 <body class="bg-white text-gray-900 antialiased">
 
 <!-- Sticky top navigation bar -->
 <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-    <span class="font-semibold text-brand text-lg tracking-tight">Lukas Folkman</span>
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="#top" class="font-semibold text-brand text-lg tracking-tight hover:opacity-80 transition-opacity">Lukas Folkman</a>
 
     <!-- Desktop nav -->
     <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
-      <a href="CV.pdf" class="text-gray-600 hover:text-brand transition-colors">CV</a>
+      <a href="#top" class="text-gray-600 hover:text-brand transition-colors">About me</a>
       <a href="#contact" class="text-gray-600 hover:text-brand transition-colors">Contact</a>
       <a href="#research" class="text-gray-600 hover:text-brand transition-colors">Research</a>
+      <a href="#profiles" class="text-gray-600 hover:text-brand transition-colors">Profiles</a>
       <a href="#projects" class="text-gray-600 hover:text-brand transition-colors">Projects</a>
       <a href="#publications" class="text-gray-600 hover:text-brand transition-colors">Publications</a>
+      <a href="CV.pdf" target="_blank" class="text-gray-600 hover:text-brand transition-colors">CV</a>
     </nav>
 
     <!-- Mobile hamburger -->
@@ -50,18 +58,20 @@
 
   <!-- Mobile dropdown menu -->
   <div id="nav-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
-    <div class="max-w-5xl mx-auto px-4 py-2 flex flex-col gap-1 text-sm font-medium">
-      <a href="CV.pdf" class="py-2 text-gray-700 hover:text-brand">CV</a>
+    <div class="max-w-7xl mx-auto px-4 py-2 flex flex-col gap-1 text-sm font-medium">
+      <a href="#top" class="py-2 text-gray-700 hover:text-brand">About me</a>
       <a href="#contact" class="py-2 text-gray-700 hover:text-brand">Contact</a>
       <a href="#research" class="py-2 text-gray-700 hover:text-brand">Research</a>
+      <a href="#profiles" class="py-2 text-gray-700 hover:text-brand">Profiles</a>
       <a href="#projects" class="py-2 text-gray-700 hover:text-brand">Projects</a>
       <a href="#publications" class="py-2 text-gray-700 hover:text-brand">Publications</a>
+      <a href="CV.pdf" target="_blank" class="py-2 text-gray-700 hover:text-brand">CV</a>
     </div>
   </div>
 </header>
 
 <!-- Hero / profile -->
-<section class="max-w-5xl mx-auto px-4 py-12">
+<section id="top" class="max-w-7xl mx-auto px-4 py-12">
   <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
     <img src="img/lukas.jpg" alt="Lukas Folkman"
          class="w-32 h-32 rounded-full object-cover object-top shadow-md flex-shrink-0">
@@ -84,8 +94,8 @@
 
 <!-- About me -->
 <section id="about" class="bg-gray-50 py-10">
-  <div class="max-w-5xl mx-auto px-4">
-    <h2 class="text-xl font-semibold text-brand mb-4">About Me</h2>
+  <div class="max-w-7xl mx-auto px-4">
+    <h2 class="text-xl font-semibold text-brand mb-4">About me</h2>
     <p class="text-gray-700 leading-relaxed text-sm max-w-3xl">
       I am a computer scientist with research interests in developing machine learning
       methods for the life sciences. I earned my PhD from the
@@ -114,7 +124,7 @@
 </section>
 
 <!-- Contact + Research + Profiles -->
-<section class="max-w-5xl mx-auto px-4 py-10">
+<section class="max-w-7xl mx-auto px-4 py-10">
   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
 
     <div id="contact">
@@ -154,10 +164,10 @@
   </div>
 </section>
 
-<!-- Projects & Resources -->
+<!-- Projects -->
 <section id="projects" class="bg-gray-50 py-10">
-  <div class="max-w-5xl mx-auto px-4">
-    <h2 class="text-xl font-semibold text-brand mb-6">Projects &amp; Resources</h2>
+  <div class="max-w-7xl mx-auto px-4">
+    <h2 class="text-xl font-semibold text-brand mb-6">Projects</h2>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -263,7 +273,7 @@
 </section>
 
 <!-- Publications -->
-<section id="publications" class="max-w-5xl mx-auto px-4 py-10">
+<section id="publications" class="max-w-7xl mx-auto px-4 py-10">
   <h2 class="text-xl font-semibold text-brand mb-2">Publications</h2>
   <p class="text-xs text-gray-500 mb-6">
     <sup>#</sup> equal contributions &nbsp;&nbsp; <sup>*</sup> senior author(s)
@@ -545,7 +555,7 @@
 </section>
 
 <!-- Footer -->
-<footer class="border-t border-gray-200 mt-8 py-6 text-center text-xs text-gray-400">
+<footer class="border-t border-gray-200 mt-8 py-6 text-center text-xs text-gray-400 max-w-7xl mx-auto">
   Lukas Folkman &copy; 2026
 </footer>
 
