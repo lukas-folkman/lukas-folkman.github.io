@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emoji Copy Paste</title>
+<style>
+  :root { --gap: 8px; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0; padding: 24px;
+    background: #fafafa; color: #222;
+  }
+  header.page { margin-bottom: 16px; }
+  header.page h1 { font-size: 1.8rem; font-weight: 700; margin: 0; }
+  header.page p { font-size: .9rem; color: #777; margin: 4px 0 0; }
+  h2 { font-size: 1rem; font-weight: 600; margin: 24px 0 10px; color: #555; }
+  h2:first-of-type { margin-top: 0; }
+  .grid { display: flex; flex-wrap: wrap; gap: var(--gap); }
+  .emoji {
+    cursor: pointer; user-select: none; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid transparent; border-radius: 8px;
+    transition: border-color .08s, background .08s;
+  }
+  .emoji:hover { border-color: #3b82f6; background: #eef4ff; }
+  .emoji.copied { border-color: #22c55e; background: #ecfdf3; }
+  #favorites .emoji { font-size: 2.6rem; width: 64px; height: 64px; }
+  .cat .emoji { font-size: 1.7rem; width: 44px; height: 44px; }
+  hr { border: none; border-top: 1px solid #e5e5e5; margin: 24px 0; }
+  #toast {
+    position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+    background: #ecfdf3; color: #166534; border: 1px solid #86efac;
+    padding: 12px 24px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,.1);
+    font-size: 1.3rem; opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Emoji Copy Paste</h1>
+  <p>Single-click will copy the emoji into your clipboard, hold the shift key to copy multiple emojis</p>
+</header>
+<hr>
+
+<!-- ============================================================= -->
+<!-- EDIT YOUR FAVORITES HERE — just change the characters below.  -->
+<!-- ============================================================= -->
+<script>
+  const FAVORITES = "❌⚠️✅☝️👏🎮🚀🤖📊📚📆📧⚙️💻🧑‍🏫🩺🧠🐟🪼🧬";
+</script>
+<!-- ============================================================= -->
+
+<h2>Favorites</h2>
+<div id="favorites" class="grid"></div>
+
+<hr>
+
+<div id="categories"></div>
+
+<div id="toast">Copied!</div>
+
+<script>
+// Categories rendered in this order. Edit any list freely.
+const CATEGORIES = {
+  "Emojis": "😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😛😝😜🤪🤨🧐🤓😎🥸🤩🥳😏😒😞😔😟😕🙁☹️😣😖😫😩🥺😢😭😤😠😡🤬🤯😳🥵🥶😱😨😰😥😓🤗🤔🤭🤫🤥😶😐😑😬🙄😯😦😧😮😲🥱😴🤤😪😵🤐🥴🤢🤮🤧😷🤒🤕🤑🤠😈👿👹👺🤡💩👻💀☠️👽👾🤖🎃😺😸😹😻😼😽🙀😿😾",
+  "People": "👋🤚🖐️✋🖖👌🤌🤏✌️🤞🤟🤘🤙👈👉👆🖕👇☝️👍👎✊👊🤛🤜👏🙌👐🤲🤝🙏✍️💅🤳💪🦾🦵🦿🦶👂🦻👃👀👁️👅👄🫦🦷🦴👶🧒👦👧🧑👨👩🧓👴👵🧑‍🏫🧑‍⚕️👨‍💻👩‍💻🧑‍🍳🧑‍🌾🧑‍🔬🧑‍🚀🧑‍🚒👮🕵️💂👷🤴👸👳👲🧕🤵👰🤰🤱👼🎅🤶🦸🦹🧙🧚🧛🧜🧝🧞🧟💆💇🚶🧎🏃💃🕺👯🧖🧗🤺🏇🤼🤽🤾🤹🧘",
+  "Objects": "⌚📱📲💻⌨️🖥️🖨️🖱️🖲️🕹️🗜️💽💾💿📀📼📷📸📹🎥📽️🎞️📞☎️📟📠📺📻🎙️🎚️🎛️🧭⏱️⏲️⏰🕰️⌛⏳📡🔋🔌💡🔦🕯️🪔🧯🛢️💸💵💴💶💷💰💳💎⚖️🧰🪛🔧🔨⚒️🛠️⛏️🔩⚙️🪤🧱⛓️🧲🔫💣🧨🪓🔪🗡️⚔️🛡️🚬⚰️⚱️🏺🔮📿🧿💈⚗️🔭🔬🕳️🩹🩺💊💉🩸🌡️🚽🚰🚿🛁🛀🧼🪥🪒🧴🧷🧹🧺🧻🪣🧽🔑🗝️🚪🪑🛋️🛏️🛌🧸🖼️🪞🪟🛍️🛒🎁🎈🎏🎀🪄🎊🎉🎎🏮🎐🧧✉️📩📨📧💌📥📦📪📫📬📭📮📯📜📃📄📑📊📈📉🗒️🗓️📆📅📇🗃️🗳️🗄️📋📁📂🗂️🗞️📰📓📔📒📕📗📘📙📚📖🔖🧷🔗📎🖇️📐📏🧮📌📍✂️🖊️🖋️✒️🖌️🖍️📝✏️🔍🔎🔏🔐🔒🔓🧬",
+  "Symbols": "❤️🧡💛💚💙💜🖤🤍🤎💔❣️💕💞💓💗💖💘💝💟☮️✝️☪️🕉️☸️✡️🔯🕎☯️☦️🛐⛎♈♉♊♋♌♍♎♏♐♑♒♓🆔⚛️🉑☢️☣️📴📳🈶🈚🈸🈺🈷️✴️🆚💮🉐㊙️㊗️🈴🈵🈹🈲🅰️🅱️🆎🆑🅾️🆘❌⭕🛑⛔📛🚫💯💢♨️🚷🚯🚳🚱🔞📵🚭❗❕❓❔‼️⁉️🔅🔆〽️⚠️🚸🔱⚜️🔰♻️✅🈯💹❇️✳️❎🌐💠Ⓜ️🌀💤🏧🚾♿🅿️🈳🈂️🛂🛃🛄🛅🚹🚺🚼⚧️🚻🚮🎦📶🈁🔣ℹ️🔤🔡🔠🆖🆗🆙🆒🆕🆓🔟🔢▶️⏸️⏯️⏹️⏺️⏭️⏮️⏩⏪⏫⏬◀️🔼🔽➡️⬅️⬆️⬇️↗️↘️↙️↖️↕️↔️↪️↩️⤴️⤵️🔀🔁🔂🔄🔃🎵🎶➕➖➗✖️♾️💲💱™️©️®️🔚🔙🔛🔝🔜〰️➰➿✔️☑️🔘🔴🟠🟡🟢🔵🟣⚫⚪🟤🔺🔻🔸🔹🔶🔷🔳🔲▪️▫️◾◽◼️◻️🟥🟧🟨🟩🟦🟪⬛⬜🟫🔈🔇🔉🔊🔔🔕📣📢💬💭🗯️♠️♣️♥️♦️🃏🎴🀄🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛",
+  "Activity": "⚽🏀🏈⚾🥎🎾🏐🏉🥏🎱🪀🏓🏸🏒🏑🥍🏏⛳🪁🏹🎣🤿🥊🥋🎽🛹🛼🛷⛸️🥌🎿⛷️🏂🪂🏋️🤼🤸⛹️🤺🤾🏌️🏇🧘🏄🏊🤽🚣🧗🚵🚴🏆🥇🥈🥉🏅🎖️🏵️🎗️🎫🎟️🎪🤹🎭🩰🎨🎬🎤🎧🎼🎹🥁🪘🎷🎺🪗🎸🪕🎻🎲♟️🎯🎳🎮🎰🧩",
+  "Animals": "🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🙈🙉🙊🐒🐔🐧🐦🐤🐣🐥🦆🦅🦉🦇🐺🐗🐴🦄🐝🪲🐛🦋🐌🐞🐜🪰🪳🦗🕷️🕸️🦂🐢🐍🦎🦖🦕🐙🦑🦐🦞🦀🐡🐠🐟🐬🐳🐋🦈🪼🐊🐅🐆🦓🦍🦧🐘🦣🦏🦛🐪🐫🦒🦘🦬🐃🐂🐄🐎🐖🐏🐑🦙🐐🦌🐕🐩🦮🐈🐈‍⬛🪶🐓🦃🦤🦚🦜🦢🦩🕊️🐇🦝🦨🦡🦫🦦🦥🐁🐀🐿️🦔🐾🐉🐲",
+  "Nature": "🌵🎄🌲🌳🌴🪵🌱🌿☘️🍀🎍🎋🍃🍂🍁🍄🐚🌾💐🌷🌹🥀🌺🌸🌼🌻🌞🌝🌛🌜🌚🌕🌖🌗🌘🌑🌒🌓🌔🌙🌎🌍🌏🪐💫⭐🌟✨⚡☄️💥🔥🌪️🌈☀️🌤️⛅🌥️☁️🌦️🌧️⛈️🌩️🌨️❄️☃️⛄🌬️💨💧💦☔🌊🫧",
+  "Food and drink": "🍏🍎🍐🍊🍋🍌🍉🍇🍓🫐🍈🍒🍑🥭🍍🥥🥝🍅🍆🥑🥦🥬🥒🌶️🫑🌽🥕🧄🧅🥔🍠🥐🥯🍞🥖🥨🧀🥚🍳🧈🥞🧇🥓🥩🍗🍖🦴🌭🍔🍟🍕🫓🥪🥙🧆🌮🌯🫔🥗🥘🫕🍝🍜🍲🍛🍣🍱🥟🦪🍤🍙🍚🍘🍥🥠🥮🍢🍡🍧🍨🍦🥧🧁🍰🎂🍮🍭🍬🍫🍿🍩🍪🌰🥜🫘🍯🥛🍼🫖☕🍵🧃🥤🧋🍶🍺🍻🥂🍷🥃🍸🍹🧉🍾🧊🥄🍴🍽️🥣🥡🥢🧂",
+  "Travel and places": "🚗🚕🚙🚌🚎🏎️🚓🚑🚒🚐🛻🚚🚛🚜🦯🦽🦼🛴🚲🛵🏍️🛺🚨🚔🚍🚘🚖🚡🚠🚟🚃🚋🚞🚝🚄🚅🚈🚂🚆🚇🚊🚉✈️🛫🛬🛩️💺🛰️🚀🛸🚁🛶⛵🚤🛥️🛳️⛴️🚢⚓⛽🚧🚦🚥🗺️🗿🗽🗼🏰🏯🏟️🎡🎢🎠⛲⛱️🏖️🏝️🏜️🌋⛰️🏔️🗻🏕️⛺🛖🏠🏡🏘️🏚️🏗️🏭🏢🏬🏣🏤🏥🏦🏨🏪🏫🏩💒🏛️⛪🕌🕍🛕🕋⛩️🧭🏙️🌃🌆🌇🌅🌄🌠🎇🎆🌉",
+  "Flags": "🏁🚩🎌🏴🏳️🏳️‍🌈🏳️‍⚧️🏴‍☠️🇺🇳🇺🇸🇬🇧🇪🇺🇨🇦🇦🇺🇩🇪🇫🇷🇮🇹🇪🇸🇵🇹🇳🇱🇧🇪🇨🇭🇦🇹🇸🇪🇳🇴🇩🇰🇫🇮🇮🇪🇵🇱🇨🇿🇬🇷🇷🇴🇭🇺🇺🇦🇷🇺🇹🇷🇨🇳🇯🇵🇰🇷🇮🇳🇧🇷🇲🇽🇦🇷🇿🇦🇳🇿🇸🇬🇮🇩🇹🇭🇵🇭🇻🇳🇲🇾🇦🇪🇸🇦🇮🇱🇪🇬🇳🇬"
+};
+
+let buffer = [];
+
+function flashToast(text) {
+  const t = document.getElementById("toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove("show"), 900);
+}
+
+function copy(ch, el, multi) {
+  if (multi) buffer.push(ch);
+  else buffer = [ch];
+  const text = buffer.join("");
+  navigator.clipboard.writeText(text).then(() => {
+    el.classList.add("copied");
+    setTimeout(() => el.classList.remove("copied"), 400);
+    flashToast(multi && buffer.length > 1
+      ? "Copied " + buffer.length + ": " + text
+      : "Copied " + ch);
+  });
+}
+
+// Releasing shift starts a fresh selection on the next shift-click.
+document.addEventListener("keyup", e => { if (e.key === "Shift") buffer = []; });
+
+function graphemes(str) {
+  if (typeof Intl !== "undefined" && Intl.Segmenter) {
+    return [...new Intl.Segmenter().segment(str)].map(s => s.segment);
+  }
+  return [...str];
+}
+
+function makeGrid(chars) {
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  const seen = new Set();
+  for (const ch of graphemes(chars)) {
+    if (seen.has(ch) || ch.trim() === "") continue;
+    seen.add(ch);
+    const d = document.createElement("div");
+    d.className = "emoji";
+    d.textContent = ch;
+    d.title = ch;
+    d.addEventListener("click", e => copy(ch, d, e.shiftKey));
+    grid.appendChild(d);
+  }
+  return grid;
+}
+
+// Favorites
+document.getElementById("favorites").replaceWith(
+  Object.assign(makeGrid(FAVORITES), { id: "favorites" })
+);
+
+// Categories
+const container = document.getElementById("categories");
+for (const [name, chars] of Object.entries(CATEGORIES)) {
+  const h = document.createElement("h2");
+  h.textContent = name;
+  const grid = makeGrid(chars);
+  grid.classList.add("cat");
+  container.append(h, grid);
+}
+</script>
+
+</body>
+</html>
