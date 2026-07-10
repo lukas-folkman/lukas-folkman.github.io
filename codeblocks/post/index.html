@@ -127,8 +127,14 @@ button{font-family:inherit;cursor:pointer;}
   flex:1;min-width:0;text-align:left;background:none;border:none;
   font-family:inherit;font-size:13px;color:var(--text);cursor:pointer;padding:3px 0;
 }
-.session-main .sn{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.session-main .sn{display:flex;align-items:center;gap:6px;font-weight:600;min-width:0;}
+.session-main .sn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .session-main .sc{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;letter-spacing:1px;}
+.session-main .scinline{
+  flex:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-weight:700;font-size:10.5px;letter-spacing:1px;color:var(--code-text);
+  background:var(--bg);border:1px solid var(--border);padding:1px 6px;border-radius:5px;
+}
 .session-main .dt{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;}
 .session-tools{display:flex;gap:2px;flex:none;opacity:0;transition:opacity .12s ease;}
 .session-item:hover .session-tools, .session-item.active .session-tools{opacity:1;}
@@ -320,9 +326,10 @@ button{font-family:inherit;cursor:pointer;}
     <span class="width-label">Wide</span>
   </div>
   <div class="actions" id="headerActions" style="display:none">
-    <span id="currentCode" class="code-pill" style="display:none"></span>
     <button class="btn secondary" id="copyCodeBtn" type="button">Copy session code</button>
     <button class="btn secondary" id="copyLinkBtn" type="button">Copy join link</button>
+    <button class="btn secondary" id="exportMdBtn" type="button">Export Markdown</button>
+    <button class="btn secondary" id="exportJsonBtn" type="button">Export JSON</button>
     <button class="btn" id="newSessionBtn" type="button">Open new session</button>
     <button class="btn secondary" id="signOutBtn" type="button">Sign out</button>
   </div>
@@ -724,7 +731,6 @@ const appView     = document.getElementById("app");
 const headerActions = document.getElementById("headerActions");
 const widthControl = document.getElementById("widthControl");
 const titleLabel  = document.getElementById("titleLabel");
-const currentCodeEl = document.getElementById("currentCode");
 const sessionListEl = document.getElementById("sessionList");
 const mainEmpty   = document.getElementById("mainEmpty");
 const stream      = document.getElementById("stream");
@@ -840,7 +846,6 @@ function deleteSession(id){
             stream.innerHTML = "";
             stream.style.display = "none";
             composer.style.display = "none";
-            currentCodeEl.style.display = "none";
             mainEmpty.style.display = "flex";
             updateHeading();
           }
@@ -894,7 +899,6 @@ auth.onAuthStateChanged(function(user){
     appView.classList.remove("active");
     headerActions.style.display = "none";
     widthControl.style.display = "none";
-    currentCodeEl.style.display = "none";
     loginView.style.display = "flex";
     document.getElementById("password").value = "";
   }
@@ -933,13 +937,15 @@ function renderSessionList(items){
     main.className = "session-main";
     main.type = "button";
     if(it.name){
-      main.innerHTML = '<span class="sn"></span><span class="dt"><span class="sc"></span> · ' + dt + '</span>';
-      main.querySelector(".sn").textContent = it.name;
-      main.querySelector(".sc").textContent = it.id;
+      // Name with the session code shown as a small chip right next to it.
+      main.innerHTML = '<span class="sn"><span class="nm"></span><span class="scinline"></span></span><span class="dt"></span>';
+      main.querySelector(".nm").textContent = it.name;
+      main.querySelector(".scinline").textContent = it.id;
     } else {
-      main.innerHTML = '<span class="sn sc"></span><span class="dt">' + dt + '</span>';
-      main.querySelector(".sn").textContent = it.id;
+      main.innerHTML = '<span class="sn"><span class="nm sc"></span></span><span class="dt"></span>';
+      main.querySelector(".nm").textContent = it.id;
     }
+    main.querySelector(".dt").textContent = dt;
     main.addEventListener("click", function(){ openSession(it.id); });
     const tools = document.createElement("div");
     tools.className = "session-tools";
@@ -987,8 +993,6 @@ function openSession(id){
   activeSession = id;
   messageStore.clear();
   stream.innerHTML = "";
-  currentCodeEl.textContent = id;
-  currentCodeEl.style.display = "inline-block";
   updateHeading();
   mainEmpty.style.display = "none";
   stream.style.display = "flex";
@@ -1095,6 +1099,67 @@ document.getElementById("copyLinkBtn").addEventListener("click", function(){
     navigator.clipboard.writeText(link).then(done).catch(function(){ fallbackCopy(link, done); });
   } else { fallbackCopy(link, done); }
 });
+
+/* ============================================================
+   Export the active session (one-time read of its full node).
+   JSON = the raw data (Firebase is JSON underneath). Markdown = a
+   chat-style transcript that renders cleanly in any Markdown viewer.
+   ============================================================ */
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+function buildMarkdown(code, name, createdAt, msgs){
+  const title = name ? name : ("Session " + code);
+  let out = "# " + title + "\n\n";
+  out += "**Session code:** `" + code + "`";
+  if(createdAt) out += "  ·  started " + new Date(createdAt).toLocaleString();
+  out += "  ·  exported " + new Date().toLocaleString() + "\n\n";
+  if(!msgs.length) return out + "_No messages yet._\n";
+  // Each message is separated by a horizontal rule and led by a bold
+  // timestamp, so it reads like a chat log. The raw message text is emitted
+  // verbatim on its own lines (blank line before it) — this is important
+  // because a message may itself be Markdown (a heading, a fenced code
+  // block, a list, …); keeping it at the left margin, unwrapped and
+  // unindented, lets its own Markdown render correctly. Blank lines around
+  // every `---` prevent a preceding text line from being misread as a
+  // Setext heading.
+  const blocks = msgs.map(function(m){
+    const t = m.ts ? new Date(m.ts).toLocaleString() : "";
+    return "**" + t + "**\n\n" + m.text;
+  });
+  out += "---\n\n" + blocks.join("\n\n---\n\n") + "\n\n---\n";
+  return out;
+}
+
+function exportSession(format){
+  if(!activeSession) return;
+  const id = activeSession;
+  db.ref("sessions/" + id).once("value").then(function(snap){
+    const val = snap.val() || {};
+    const meta = val.meta || {};
+    const msgsObj = val.messages || {};
+    const msgs = Object.keys(msgsObj).sort().map(function(k){
+      const m = msgsObj[k] || {};
+      return { id: k, ts: m.ts || 0, text: m.text != null ? m.text : "" };
+    });
+    const name = meta.name || "";
+    if(format === "json"){
+      const data = { session: id, name: name, createdAt: meta.createdAt || null,
+        exportedAt: Date.now(), messages: msgs };
+      downloadFile("codeblocks-" + id + ".json", JSON.stringify(data, null, 2), "application/json");
+    } else {
+      downloadFile("codeblocks-" + id + ".md", buildMarkdown(id, name, meta.createdAt, msgs), "text/markdown;charset=utf-8");
+    }
+  }).catch(function(err){ alert("Export failed: " + (err && err.message)); });
+}
+document.getElementById("exportJsonBtn").addEventListener("click", function(){ exportSession("json"); });
+document.getElementById("exportMdBtn").addEventListener("click", function(){ exportSession("md"); });
 
 /* --- Post --- */
 function postMessage(){
