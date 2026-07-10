@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markdown Viewer</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxwYXRoIGZpbGw9IiNDMjYwM0UiIGQ9Ik04NS4zMzMzMzMgNjgyLjY2NjY2NyA4NS4zMzMzMzMgMzQxLjMzMzMzMyAxNzAuNjY2NjY3IDM0MS4zMzMzMzMgMjk4LjY2NjY2NyA0NjkuMzMzMzMzIDQyNi42NjY2NjcgMzQxLjMzMzMzMyA1MTIgMzQxLjMzMzMzMyA1MTIgNjgyLjY2NjY2NyA0MjYuNjY2NjY3IDY4Mi42NjY2NjcgNDI2LjY2NjY2NyA0NjIuMDggMjk4LjY2NjY2NyA1OTAuMDggMTcwLjY2NjY2NyA0NjIuMDggMTcwLjY2NjY2NyA2ODIuNjY2NjY3IDg1LjMzMzMzMyA2ODIuNjY2NjY3TTY4Mi42NjY2NjcgMzQxLjMzMzMzMyA4MTAuNjY2NjY3IDM0MS4zMzMzMzMgODEwLjY2NjY2NyA1MTIgOTE3LjMzMzMzMyA1MTIgNzQ2LjY2NjY2NyA3MDQgNTc2IDUxMiA2ODIuNjY2NjY3IDUxMiA2ODIuNjY2NjY3IDM0MS4zMzMzMzNaIi8+PC9zdmc+">
+<style>
+  :root{
+    --bg: #FAF9F5;
+    --bg-panel: #F4F3EE;
+    --text: #1F1E1D;
+    --text-muted: #7A7468;
+    --border: #E5E2D9;
+    --accent: #C2603E;
+    --accent-hover: #A94E30;
+    --code-bg: #F7F4EE;
+    --code-text: #92402A;
+    --code-border: rgba(146,64,42,0.28);
+    --inline-code-bg: #EFEDE5;
+    --inline-code-text: #92402A;
+    --link: #B0512F;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+
+  /* header bar */
+  header{
+    position:sticky;
+    top:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 24px;
+    background:var(--bg);
+    border-bottom:1px solid var(--border);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600;
+    font-size:15px;
+    color:var(--text);
+    min-width:0;
+  }
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--accent);
+    flex:none;
+  }
+  .filename{
+    color:var(--text-muted);
+    font-weight:400;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .actions{display:flex;align-items:center;gap:8px;flex:none;}
+  button{
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    transition:background .15s ease;
+  }
+  .btn:hover{background:var(--accent-hover);}
+  .btn.secondary{
+    background:transparent;
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  .btn.secondary:hover{background:var(--bg-panel);}
+
+  input[type=file]{display:none;}
+
+  /* main area */
+  main{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    padding:40px 24px 120px;
+  }
+
+  /* empty / drop state */
+  #dropzone{
+    width:100%;
+    max-width:640px;
+    margin-top:6vh;
+    border:2px dashed var(--border);
+    border-radius:16px;
+    padding:64px 32px;
+    text-align:center;
+    color:var(--text-muted);
+    transition:border-color .15s ease, background .15s ease;
+  }
+  #dropzone.dragover{
+    border-color:var(--accent);
+    background:var(--bg-panel);
+  }
+  #dropzone h1{
+    font-size:19px;
+    color:var(--text);
+    margin:0 0 8px;
+  }
+  #dropzone p{
+    font-size:14px;
+    line-height:1.5;
+    margin:0 0 20px;
+  }
+
+  /* content */
+  #content{
+    width:100%;
+    max-width:760px;
+    line-height:1.65;
+    font-size:15.5px;
+  }
+  #content h1,#content h2,#content h3,#content h4,#content h5,#content h6{
+    font-weight:600;
+    line-height:1.3;
+    margin:1.6em 0 0.6em;
+  }
+  #content h1{font-size:1.85em;border-bottom:1px solid var(--border);padding-bottom:0.3em;}
+  #content h2{font-size:1.45em;border-bottom:1px solid var(--border);padding-bottom:0.25em;}
+  #content h3{font-size:1.2em;}
+  #content h4{font-size:1.05em;}
+  #content > *:first-child{margin-top:0;}
+  #content p{margin:0.9em 0;}
+  #content a{color:var(--link);text-decoration:underline;text-decoration-color:rgba(176,81,47,0.35);}
+  #content a:hover{text-decoration-color:var(--link);}
+  #content ul,#content ol{margin:0.7em 0;padding-left:1.4em;}
+  #content li{margin:0.3em 0;}
+  #content blockquote{
+    margin:1em 0;
+    padding:0.2em 1em;
+    border-left:3px solid var(--accent);
+    color:var(--text-muted);
+    background:var(--bg-panel);
+    border-radius:0 6px 6px 0;
+  }
+  #content blockquote p{margin:0.6em 0;}
+  #content hr{
+    border:none;
+    border-top:1px solid var(--border);
+    margin:2em 0;
+  }
+  #content img{max-width:100%;border-radius:8px;}
+  #content table{
+    border-collapse:collapse;
+    width:100%;
+    margin:1em 0;
+    font-size:0.92em;
+    display:block;
+    overflow-x:auto;
+  }
+  #content th,#content td{
+    border:1px solid var(--border);
+    padding:8px 12px;
+    text-align:left;
+  }
+  #content th{
+    background:var(--bg-panel);
+    font-weight:600;
+  }
+  #content code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    background:var(--inline-code-bg);
+    color:var(--text);
+    padding:0.15em 0.4em;
+    border-radius:5px;
+    font-size:0.88em;
+  }
+
+  /* inline code hover-copy */
+  .inline-code-wrap{
+    position:relative;
+    display:inline-block;
+    vertical-align:baseline;
+  }
+  .inline-copy-btn{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:scale(0.92);
+    transition:opacity .12s ease, transform .12s ease, background .12s ease;
+    background:var(--bg);
+    color:var(--inline-code-text);
+    border:1px solid var(--code-border);
+    border-radius:999px;
+    padding:2px 7px 2px 5px;
+    font-size:10.5px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:3px;
+    cursor:pointer;
+    white-space:nowrap;
+    z-index:20;
+    box-shadow:0 1px 4px rgba(0,0,0,0.12);
+  }
+  .inline-copy-btn svg{width:10px;height:10px;flex:none;}
+  .inline-code-wrap:hover .inline-copy-btn{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:scale(1);
+  }
+  .inline-copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
+
+  /* code blocks */
+  .code-block{
+    position:relative;
+    margin:1.2em 0;
+    border-radius:10px;
+    border:1px solid var(--code-border);
+    background:var(--code-bg);
+    box-shadow:var(--shadow);
+  }
+  .copy-btn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    opacity:0;
+    visibility:hidden;
+    transform:translateY(-4px);
+    transition:opacity .15s ease, transform .15s ease, background .15s ease;
+    background:var(--bg);
+    border:1px solid var(--code-border);
+    color:var(--code-text);
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    box-shadow:0 1px 4px rgba(0,0,0,0.1);
+    z-index:5;
+  }
+  .code-block:hover .copy-btn,
+  .copy-btn:focus-visible{
+    opacity:1;
+    visibility:visible;
+    transform:translateY(0);
+  }
+  .copy-btn:hover{background:rgba(146,64,42,0.08);}
+  .copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
+  .copy-btn svg{width:13px;height:13px;flex:none;}
+
+  .code-block pre{
+    margin:0;
+    padding:16px 18px;
+    overflow-x:auto;
+  }
+  #content .code-block code{
+    background:none;
+    color:var(--text);
+    padding:0;
+    border-radius:0;
+    font-size:0.86em;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    line-height:1.55;
+    white-space:pre;
+  }
+
+  footer{
+    text-align:center;
+    padding:16px;
+    font-size:12px;
+    color:var(--text-muted);
+  }
+
+  @media (max-width:640px){
+    header{padding:10px 14px;}
+    main{padding:24px 14px 100px;}
+    #dropzone{padding:40px 20px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="dot"></span>
+    <span>Markdown Viewer</span>
+    <span class="filename" id="filenameLabel"></span>
+  </div>
+  <div class="actions" id="actions">
+    <button class="btn" id="openBtn">Open .md file</button>
+  </div>
+  <input type="file" id="fileInput" accept=".md,.markdown,.mdown,.mkd,.txt">
+</header>
+
+<main>
+  <div id="dropzone">
+    <h1>Open a Markdown file</h1>
+    <p>Click "Open .md file" above, or drag &amp; drop a <code>.md</code> file anywhere on this page.<br>Everything runs locally in your browser — nothing is uploaded.</p>
+    <button class="btn secondary" id="dropOpenBtn">Choose a file</button>
+  </div>
+  <article id="content" style="display:none;"></article>
+</main>
+
+<footer>Renders locally in your browser · no files leave your machine</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Markdown parser (no external dependencies) ---------------- */
+
+  function escapeHtml(s){
+    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function splitTableRow(line){
+    let l = line.trim();
+    if(l.startsWith("|")) l = l.slice(1);
+    if(l.endsWith("|")) l = l.slice(0,-1);
+    // split on unescaped pipes
+    return l.split(/(?<!\\)\|/).map(c => c.replace(/\\\|/g,"|"));
+  }
+
+  // Blocks dangerous URL schemes (javascript:, data:, vbscript:) in links and
+  // images, including attempts to hide the scheme behind whitespace/control
+  // characters (e.g. "java\tscript:..." or percent-encoded parens).
+  function sanitizeUrl(url){
+    let stripped = "";
+    for(let k = 0; k < url.length; k++){
+      const code = url.charCodeAt(k);
+      if(code > 32) stripped += url[k];
+    }
+    if(/^(javascript|data|vbscript):/i.test(stripped)) return "#";
+    return url;
+  }
+
+  function inline(text){
+    const codes = [];
+    text = text.replace(/`([^`]+)`/g, function(m, c){
+      codes.push(escapeHtml(c));
+      return "@@IC" + (codes.length-1) + "@@";
+    });
+    text = escapeHtml(text);
+
+    // images
+    text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g, function(m, alt, src, title){
+      return '<img alt="' + alt + '" src="' + sanitizeUrl(src) + '"' + (title ? ' title="' + title + '"' : '') + '>';
+    });
+    // links
+    text = text.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g, function(m, label, href, title){
+      return '<a href="' + sanitizeUrl(href) + '"' + (title ? ' title="' + title + '"' : '') + ' target="_blank" rel="noopener noreferrer">' + label + '</a>';
+    });
+    // autolinks
+    text = text.replace(/&lt;((https?:\/\/|mailto:)[^&\s]+)&gt;/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    // bold
+    text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    text = text.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+    // italic
+    text = text.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+    text = text.replace(/(?<![A-Za-z0-9_])_([^_\n]+)_(?![A-Za-z0-9_])/g, "<em>$1</em>");
+    // strikethrough
+    text = text.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+    // hard line breaks
+    text = text.replace(/ {2,}\n/g, "<br>\n");
+
+    text = text.replace(/@@IC(\d+)@@/g, function(m, idx){
+      return '<span class="inline-code-wrap"><code>' + codes[+idx] + '</code>' +
+        '<button class="inline-copy-btn" type="button" data-label="Copy" aria-label="Copy code">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+        '<span class="copy-label">Copy</span></button></span>';
+    });
+    return text;
+  }
+
+  function parseListBlock(blockLines){
+    const itemRe = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+    const root = { indent:-1, children:[] };
+    const stack = [root];
+    for(const raw of blockLines){
+      const m = raw.match(itemRe);
+      if(!m){
+        // Lazy continuation line (wrapped or indented text with no bullet
+        // marker): fold it into the current item instead of dropping it.
+        const top = stack[stack.length-1];
+        if(top !== root && /\S/.test(raw)){
+          top.content += " " + raw.trim();
+        }
+        continue;
+      }
+      const indent = m[1].length;
+      const ordered = /\d/.test(m[2]);
+      const content = m[3];
+      const node = { indent, ordered, content, children:[] };
+      while(stack.length > 1 && indent <= stack[stack.length-1].indent){
+        stack.pop();
+      }
+      stack[stack.length-1].children.push(node);
+      stack.push(node);
+    }
+    function render(node){
+      if(!node.children.length) return "";
+      const ordered = node.children[0].ordered;
+      const tag = ordered ? "ol" : "ul";
+      let out = "<" + tag + ">";
+      for(const c of node.children){
+        out += "<li>" + inline(c.content) + render(c) + "</li>";
+      }
+      out += "</" + tag + ">";
+      return out;
+    }
+    return render(root);
+  }
+
+  function renderMarkdown(src){
+    src = src.replace(/\r\n?/g, "\n");
+
+    const codeBlocks = [];
+    src = src.replace(/^```([^\n`]*)\n([\s\S]*?)\n```[ \t]*$/gm, function(m, lang, code){
+      const idx = codeBlocks.length;
+      codeBlocks.push({ lang: lang.trim(), code: code });
+      return "@@CB" + idx + "@@";
+    });
+
+    const lines = src.split("\n");
+    let html = "";
+    let i = 0;
+    let para = [];
+
+    function flushPara(){
+      if(para.length){
+        html += "<p>" + inline(para.join("\n")) + "</p>\n";
+        para = [];
+      }
+    }
+
+    while(i < lines.length){
+      const line = lines[i];
+
+      if(/^\s*$/.test(line)){
+        flushPara();
+        i++;
+        continue;
+      }
+
+      const cb = line.match(/^@@CB(\d+)@@$/);
+      if(cb){
+        flushPara();
+        const block = codeBlocks[+cb[1]];
+        const lang = block.lang;
+        const langClass = lang ? ' class="language-' + escapeHtml(lang) + '"' : "";
+        html += '<div class="code-block">' +
+          '<button class="copy-btn" type="button" data-label="Copy">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+          '<span class="copy-label">Copy</span></button>' +
+          '<pre><code' + langClass + '>' + escapeHtml(block.code) + '</code></pre></div>\n';
+        i++;
+        continue;
+      }
+
+      const h = line.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/);
+      if(h){
+        flushPara();
+        const level = h[1].length;
+        html += "<h" + level + ">" + inline(h[2]) + "</h" + level + ">\n";
+        i++;
+        continue;
+      }
+
+      if(/^ {0,3}([-*_])(\s*\1){2,}\s*$/.test(line)){
+        flushPara();
+        html += "<hr>\n";
+        i++;
+        continue;
+      }
+
+      if(/^ {0,3}>\s?/.test(line)){
+        flushPara();
+        const bq = [];
+        while(i < lines.length && /^ {0,3}>\s?/.test(lines[i])){
+          bq.push(lines[i].replace(/^ {0,3}>\s?/, ""));
+          i++;
+        }
+        html += "<blockquote>" + renderMarkdown(bq.join("\n")) + "</blockquote>\n";
+        continue;
+      }
+
+      if(/^\s*\|?.+\|.*$/.test(line) && lines[i+1] && /^\s*\|?[\s:|-]+\|?[\s:|-]*$/.test(lines[i+1]) && /-/.test(lines[i+1])){
+        flushPara();
+        const headerCells = splitTableRow(line);
+        const alignRow = splitTableRow(lines[i+1]);
+        const aligns = alignRow.map(function(c){
+          const t = c.trim();
+          if(/^:-+:$/.test(t)) return "center";
+          if(/^-+:$/.test(t)) return "right";
+          if(/^:-+$/.test(t)) return "left";
+          return "";
+        });
+        i += 2;
+        const rows = [];
+        while(i < lines.length && /\|/.test(lines[i]) && !/^\s*$/.test(lines[i])){
+          rows.push(splitTableRow(lines[i]));
+          i++;
+        }
+        html += "<table><thead><tr>" + headerCells.map(function(c, idx){
+          const a = aligns[idx];
+          return "<th" + (a ? ' style="text-align:' + a + '"' : "") + ">" + inline(c.trim()) + "</th>";
+        }).join("") + "</tr></thead>";
+        if(rows.length){
+          html += "<tbody>" + rows.map(function(r){
+            return "<tr>" + r.map(function(c, idx){
+              const a = aligns[idx];
+              return "<td" + (a ? ' style="text-align:' + a + '"' : "") + ">" + inline((c||"").trim()) + "</td>";
+            }).join("") + "</tr>";
+          }).join("") + "</tbody>";
+        }
+        html += "</table>\n";
+        continue;
+      }
+
+      if(/^\s*([-*+]|\d+[.)])\s+/.test(line)){
+        flushPara();
+        const block = [];
+        let topOrdered = null;
+        while(i < lines.length){
+          const cur = lines[i];
+          if(/^\s*$/.test(cur)) break;
+          const m = cur.match(/^(\s*)([-*+]|\d+[.)])\s+/);
+          if(m){
+            const indent = m[1].length;
+            const ordered = /\d/.test(m[2]);
+            if(indent === 0){
+              // A top-level item whose marker type (bulleted vs numbered)
+              // differs from the list we're building starts a new list,
+              // even without a blank line separating them.
+              if(topOrdered === null) topOrdered = ordered;
+              else if(ordered !== topOrdered) break;
+            }
+            block.push(cur);
+            i++;
+          } else if(block.length && !isListBreaker(cur)){
+            // Lazy continuation: an unindented/indented text line that isn't
+            // itself a new block (heading, hr, blockquote, code fence marker)
+            // belongs to the previous list item.
+            block.push(cur);
+            i++;
+          } else {
+            break;
+          }
+        }
+        html += parseListBlock(block) + "\n";
+        continue;
+      }
+
+      // Setext heading: a standalone text line immediately followed by a
+      // line of only "=" (H1) or only "-" (H2), e.g. "Title\n=====".
+      if(para.length === 0 && lines[i+1] !== undefined && /^ {0,3}(=+|-+)\s*$/.test(lines[i+1])){
+        const level = lines[i+1].trim()[0] === "=" ? 1 : 2;
+        html += "<h" + level + ">" + inline(line.trim()) + "</h" + level + ">\n";
+        i += 2;
+        continue;
+      }
+
+      para.push(line);
+      i++;
+    }
+    flushPara();
+    return html;
+  }
+
+  function isListBreaker(line){
+    return /^(#{1,6})\s+/.test(line) ||
+      /^ {0,3}([-*_])(\s*\1){2,}\s*$/.test(line) ||
+      /^ {0,3}>\s?/.test(line) ||
+      /^@@CB\d+@@$/.test(line);
+  }
+
+  /* ---------------- App wiring ---------------- */
+
+  const fileInput = document.getElementById("fileInput");
+  const openBtn = document.getElementById("openBtn");
+  const dropOpenBtn = document.getElementById("dropOpenBtn");
+  const dropzone = document.getElementById("dropzone");
+  const content = document.getElementById("content");
+  const filenameLabel = document.getElementById("filenameLabel");
+  const actions = document.getElementById("actions");
+
+  function renderFile(name, text){
+    filenameLabel.textContent = name;
+    content.innerHTML = renderMarkdown(text);
+    dropzone.style.display = "none";
+    content.style.display = "block";
+    document.title = name + " — Markdown Viewer";
+
+    if(!document.getElementById("reopenBtn")){
+      const reopen = document.createElement("button");
+      reopen.className = "btn secondary";
+      reopen.id = "reopenBtn";
+      reopen.textContent = "Open another file";
+      reopen.addEventListener("click", function(){ fileInput.click(); });
+      actions.insertBefore(reopen, actions.firstChild);
+    }
+  }
+
+  const CHECK_SVG = '<polyline points="20 6 9 17 4 12"></polyline>';
+
+  content.addEventListener("click", function(e){
+    const btn = e.target.closest(".copy-btn, .inline-copy-btn");
+    if(!btn) return;
+    let codeEl;
+    if(btn.classList.contains("copy-btn")){
+      codeEl = btn.closest(".code-block").querySelector("code");
+    } else {
+      codeEl = btn.previousElementSibling;
+    }
+    if(codeEl) copyText(codeEl.textContent, btn);
+  });
+
+  function copyText(text, btn){
+    function done(){
+      const label = btn.querySelector(".copy-label");
+      const svg = btn.querySelector("svg");
+      const prevSvg = svg ? svg.innerHTML : null;
+      btn.classList.add("copied");
+      if(label) label.textContent = "Copied!";
+      if(svg) svg.innerHTML = CHECK_SVG;
+      setTimeout(function(){
+        btn.classList.remove("copied");
+        if(label) label.textContent = "Copy";
+        if(svg && prevSvg !== null) svg.innerHTML = prevSvg;
+      }, 1200);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+    done();
+  }
+
+  function loadFile(file){
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e){ renderFile(file.name, e.target.result); };
+    reader.readAsText(file);
+  }
+
+  openBtn.addEventListener("click", function(){ fileInput.click(); });
+  dropOpenBtn.addEventListener("click", function(){ fileInput.click(); });
+  fileInput.addEventListener("change", function(e){ loadFile(e.target.files[0]); });
+
+  ["dragenter","dragover"].forEach(function(evt){
+    window.addEventListener(evt, function(e){
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+  });
+  ["dragleave","drop"].forEach(function(evt){
+    window.addEventListener(evt, function(e){
+      e.preventDefault();
+      if(evt === "dragleave" && e.target !== dropzone) return;
+      dropzone.classList.remove("dragover");
+    });
+  });
+  window.addEventListener("drop", function(e){
+    e.preventDefault();
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) loadFile(file);
+  });
+})();
+</script>
+</body>
+</html>
