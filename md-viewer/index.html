@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Markdown Viewer</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiPjxwYXRoIGZpbGw9IiNDMjYwM0UiIGQ9Ik04NS4zMzMzMzMgNjgyLjY2NjY2NyA4NS4zMzMzMzMgMzQxLjMzMzMzMyAxNzAuNjY2NjY3IDM0MS4zMzMzMzMgMjk4LjY2NjY2NyA0NjkuMzMzMzMzIDQyNi42NjY2NjcgMzQxLjMzMzMzMyA1MTIgMzQxLjMzMzMzMyA1MTIgNjgyLjY2NjY2NyA0MjYuNjY2NjY3IDY4Mi42NjY2NjcgNDI2LjY2NjY2NyA0NjIuMDggMjk4LjY2NjY2NyA1OTAuMDggMTcwLjY2NjY2NyA0NjIuMDggMTcwLjY2NjY2NyA2ODIuNjY2NjY3IDg1LjMzMzMzMyA2ODIuNjY2NjY3TTY4Mi42NjY2NjcgMzQxLjMzMzMzMyA4MTAuNjY2NjY3IDM0MS4zMzMzMzMgODEwLjY2NjY2NyA1MTIgOTE3LjMzMzMzMyA1MTIgNzQ2LjY2NjY2NyA3MDQgNTc2IDUxMiA2ODIuNjY2NjY3IDUxMiA2ODIuNjY2NjY3IDM0MS4zMzMzMzNaIi8+PC9zdmc+">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjYxLjMzMzMzMyAzMTcuMzMzMzMzIDg4MCA0MTAuNjY2NjY3Ij48cGF0aCBmaWxsPSIjQzI2MDNFIiBkPSJNODUuMzMzMzMzIDY4Mi42NjY2NjcgODUuMzMzMzMzIDM0MS4zMzMzMzMgMTcwLjY2NjY2NyAzNDEuMzMzMzMzIDI5OC42NjY2NjcgNDY5LjMzMzMzMyA0MjYuNjY2NjY3IDM0MS4zMzMzMzMgNTEyIDM0MS4zMzMzMzMgNTEyIDY4Mi42NjY2NjcgNDI2LjY2NjY2NyA2ODIuNjY2NjY3IDQyNi42NjY2NjcgNDYyLjA4IDI5OC42NjY2NjcgNTkwLjA4IDE3MC42NjY2NjcgNDYyLjA4IDE3MC42NjY2NjcgNjgyLjY2NjY2NyA4NS4zMzMzMzMgNjgyLjY2NjY2N002ODIuNjY2NjY3IDM0MS4zMzMzMzMgODEwLjY2NjY2NyAzNDEuMzMzMzMzIDgxMC42NjY2NjcgNTEyIDkxNy4zMzMzMzMgNTEyIDc0Ni42NjY2NjcgNzA0IDU3NiA1MTIgNjgyLjY2NjY2NyA1MTIgNjgyLjY2NjY2NyAzNDEuMzMzMzMzWiIvPjwvc3ZnPg==">
 <style>
   :root{
     --bg: #FAF9F5;
@@ -23,7 +23,7 @@
     --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
   }
   *{box-sizing:border-box;}
-  html,body{height:100%;}
+  html{margin:0;}
   body{
     margin:0;
     background:var(--bg);
@@ -37,8 +37,10 @@
 
   /* header bar */
   header{
-    position:sticky;
+    position:fixed;
     top:0;
+    left:0;
+    right:0;
     z-index:10;
     display:flex;
     align-items:center;
@@ -57,20 +59,68 @@
     color:var(--text);
     min-width:0;
   }
-  .brand .dot{
-    width:10px;height:10px;border-radius:50%;
-    background:var(--accent);
+  .brand .icon{
+    height:1.4em;
+    width:auto;
+    color:var(--accent);
     flex:none;
   }
-  .filename{
-    color:var(--text-muted);
-    font-weight:400;
-    font-size:13px;
+  .brand #titleLabel{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
+    min-width:0;
   }
   .actions{display:flex;align-items:center;gap:8px;flex:none;}
+
+  /* page-width slider */
+  .width-control{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:1;
+    max-width:280px;
+    justify-content:center;
+  }
+  .width-control .width-label{
+    font-size:11px;
+    color:var(--text-muted);
+    white-space:nowrap;
+    flex:none;
+  }
+  #widthSlider{
+    flex:1;
+    -webkit-appearance:none;
+    appearance:none;
+    height:4px;
+    min-width:60px;
+    border-radius:999px;
+    background:var(--border);
+    outline:none;
+    cursor:pointer;
+  }
+  #widthSlider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:14px;height:14px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid var(--bg);
+    box-shadow:0 0 0 1px var(--code-border);
+  }
+  #widthSlider::-moz-range-thumb{
+    width:14px;height:14px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid var(--bg);
+    box-shadow:0 0 0 1px var(--code-border);
+  }
+  @media (max-width:640px){
+    .width-control{display:none;}
+  }
+
   button{
     font-family:inherit;
     cursor:pointer;
@@ -100,13 +150,13 @@
     flex:1;
     display:flex;
     justify-content:center;
-    padding:40px 24px 120px;
+    padding:calc(var(--header-h, 64px) + 40px) 24px 120px;
   }
 
   /* empty / drop state */
   #dropzone{
     width:100%;
-    max-width:640px;
+    max-width:min(var(--content-width, 760px), 96vw);
     margin-top:6vh;
     border:2px dashed var(--border);
     border-radius:16px;
@@ -133,7 +183,7 @@
   /* content */
   #content{
     width:100%;
-    max-width:760px;
+    max-width:min(var(--content-width, 760px), 96vw);
     line-height:1.65;
     font-size:15.5px;
   }
@@ -297,7 +347,7 @@
 
   @media (max-width:640px){
     header{padding:10px 14px;}
-    main{padding:24px 14px 100px;}
+    main{padding:calc(var(--header-h, 56px) + 24px) 14px 100px;}
     #dropzone{padding:40px 20px;}
   }
 </style>
@@ -306,9 +356,13 @@
 
 <header>
   <div class="brand">
-    <span class="dot"></span>
-    <span>Markdown Viewer</span>
-    <span class="filename" id="filenameLabel"></span>
+    <svg class="icon" viewBox="61.333333 317.333333 880 410.666667" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path fill="currentColor" d="M85.333333 682.666667 85.333333 341.333333 170.666667 341.333333 298.666667 469.333333 426.666667 341.333333 512 341.333333 512 682.666667 426.666667 682.666667 426.666667 462.08 298.666667 590.08 170.666667 462.08 170.666667 682.666667 85.333333 682.666667M682.666667 341.333333 810.666667 341.333333 810.666667 512 917.333333 512 746.666667 704 576 512 682.666667 512 682.666667 341.333333Z"/></svg>
+    <span id="titleLabel">Markdown Viewer</span>
+  </div>
+  <div class="width-control">
+    <span class="width-label">Narrow</span>
+    <input type="range" id="widthSlider" min="0" max="100" step="1" value="50" aria-label="Page content width">
+    <span class="width-label">Wide</span>
   </div>
   <div class="actions" id="actions">
     <button class="btn" id="openBtn">Open .md file</button>
@@ -605,24 +659,14 @@
   const dropOpenBtn = document.getElementById("dropOpenBtn");
   const dropzone = document.getElementById("dropzone");
   const content = document.getElementById("content");
-  const filenameLabel = document.getElementById("filenameLabel");
-  const actions = document.getElementById("actions");
+  const titleLabel = document.getElementById("titleLabel");
 
   function renderFile(name, text){
-    filenameLabel.textContent = name;
+    titleLabel.textContent = name;
     content.innerHTML = renderMarkdown(text);
     dropzone.style.display = "none";
     content.style.display = "block";
     document.title = name + " — Markdown Viewer";
-
-    if(!document.getElementById("reopenBtn")){
-      const reopen = document.createElement("button");
-      reopen.className = "btn secondary";
-      reopen.id = "reopenBtn";
-      reopen.textContent = "Open another file";
-      reopen.addEventListener("click", function(){ fileInput.click(); });
-      actions.insertBefore(reopen, actions.firstChild);
-    }
   }
 
   const CHECK_SVG = '<polyline points="20 6 9 17 4 12"></polyline>';
@@ -700,6 +744,49 @@
     e.preventDefault();
     const file = e.dataTransfer.files && e.dataTransfer.files[0];
     if(file) loadFile(file);
+  });
+
+  /* ---------------- Header height sync (fixed header spacer) ---------------- */
+  // The header uses position:fixed (not sticky) so it can't lose its stuck
+  // state to sticky/zoom rounding quirks. Since that takes it out of normal
+  // flow, we measure its real rendered height and feed it back in as
+  // --header-h so <main>'s top padding always clears it, at any zoom level,
+  // font size, or header content wrap.
+  const headerEl = document.querySelector("header");
+  function syncHeaderHeight(){
+    document.documentElement.style.setProperty("--header-h", headerEl.offsetHeight + "px");
+  }
+  syncHeaderHeight();
+  if(window.ResizeObserver){
+    new ResizeObserver(syncHeaderHeight).observe(headerEl);
+  } else {
+    window.addEventListener("resize", syncHeaderHeight);
+  }
+
+  /* ---------------- Page-width slider ---------------- */
+  // The slider's raw 0-100 value is mapped through a two-segment linear
+  // curve so the midpoint (50) lands exactly on the original 760px default,
+  // while still reaching a comfortably narrow ~420px on the low end and a
+  // very wide ~2400px on the high end (roughly full-width on most screens).
+  const widthSlider = document.getElementById("widthSlider");
+  const WIDTH_MIN = 420;
+  const WIDTH_DEFAULT = 760;
+  const WIDTH_MAX = 2400;
+
+  function sliderValueToWidth(value){
+    const v = Number(value);
+    if(v <= 50) return WIDTH_MIN + (v / 50) * (WIDTH_DEFAULT - WIDTH_MIN);
+    return WIDTH_DEFAULT + ((v - 50) / 50) * (WIDTH_MAX - WIDTH_DEFAULT);
+  }
+
+  function applyContentWidth(value){
+    const px = Math.round(sliderValueToWidth(value));
+    document.documentElement.style.setProperty("--content-width", px + "px");
+  }
+
+  applyContentWidth(widthSlider.value);
+  widthSlider.addEventListener("input", function(){
+    applyContentWidth(widthSlider.value);
   });
 })();
 </script>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Codeblocks</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%2260%2025%20210%20210%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23C2603E%22%20stroke-width%3D%2211%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M70%2C90%20L200%2C90%20L200%2C220%20L70%2C220%20Z%22%2F%3E%3Cpath%20d%3D%22M70%2C90%20L130%2C40%20L260%2C40%20L200%2C90%22%2F%3E%3Cpath%20d%3D%22M260%2C40%20L260%2C170%20L200%2C220%22%2F%3E%3C%2Fg%3E%3Ctext%20x%3D%22135%22%20y%3D%22155%22%20font-family%3D%22monospace%22%20font-size%3D%22105%22%20font-weight%3D%22bold%22%20fill%3D%22%23C2603E%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22central%22%3EC%3C%2Ftext%3E%3C%2Fsvg%3E">
+<style>
+:root{
+  --bg: #FAF9F5;
+  --bg-panel: #F4F3EE;
+  --text: #1F1E1D;
+  --text-muted: #7A7468;
+  --border: #E5E2D9;
+  --accent: #C2603E;
+  --accent-hover: #A94E30;
+  --code-bg: #F7F4EE;
+  --code-text: #92402A;
+  --code-border: rgba(146,64,42,0.28);
+  --inline-code-bg: #EFEDE5;
+  --inline-code-text: #92402A;
+  --link: #B0512F;
+  --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
+}
+*{box-sizing:border-box;}
+html{margin:0;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+
+/* Header / brand bar */
+header{
+  position:sticky; top:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; padding:12px 24px;
+  background:var(--bg); border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;color:var(--text);min-width:0;}
+.brand .icon{height:1.85em;width:auto;color:var(--accent);flex:none;}
+.brand .code-pill{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:13px;font-weight:700;letter-spacing:1px;
+  background:var(--bg-panel);border:1px solid var(--border);
+  padding:3px 10px;border-radius:6px;color:var(--code-text);
+}
+.actions{display:flex;align-items:center;gap:8px;flex:none;}
+
+/* Buttons */
+button{font-family:inherit;cursor:pointer;}
+.btn{
+  background:var(--accent); color:#fff; border:none;
+  padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600;
+  transition:background .15s ease;
+}
+.btn:hover{background:var(--accent-hover);}
+.btn.secondary{background:transparent;color:var(--text);border:1px solid var(--border);}
+.btn.secondary:hover{background:var(--bg-panel);}
+
+/* Join screen */
+.join-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;}
+.join-card{
+  width:100%;max-width:360px;background:var(--bg-panel);
+  border:1px solid var(--border);border-radius:14px;padding:28px 26px;
+  box-shadow:var(--shadow);
+}
+.join-card h1{font-size:18px;margin:0 0 4px;}
+.join-card p{font-size:13px;color:var(--text-muted);margin:0 0 20px;}
+.join-card label{display:block;font-size:12px;font-weight:600;color:var(--text-muted);margin:0 0 5px;}
+.join-card input{
+  width:100%;padding:10px 12px;font-size:16px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing:2px;text-transform:uppercase;font-weight:700;
+  border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);
+  margin-bottom:14px;
+}
+.join-card input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
+.join-card .btn{width:100%;padding:10px;font-size:14px;}
+.join-error{color:#B22;font-size:12.5px;margin:6px 0 0;min-height:16px;}
+
+/* Stream */
+#stage{flex:1;display:none;flex-direction:column;min-height:0;}
+#stage.active{display:flex;}
+.stream{flex:1;overflow-y:auto;padding:20px 24px;}
+.stream-hint{color:var(--text-muted);font-size:14px;padding:8px 2px;}
+
+/* Message typography */
+.msg-content{line-height:1.65;font-size:15.5px;}
+.msg-content h1,.msg-content h2,.msg-content h3,.msg-content h4,.msg-content h5,.msg-content h6{
+  font-weight:600;line-height:1.3;margin:0.8em 0 0.4em;
+}
+.msg-content h1{font-size:1.5em;border-bottom:1px solid var(--border);padding-bottom:0.2em;}
+.msg-content h2{font-size:1.3em;border-bottom:1px solid var(--border);padding-bottom:0.2em;}
+.msg-content h3{font-size:1.1em;}
+.msg-content > *:first-child{margin-top:0;}
+.msg-content > *:last-child{margin-bottom:0;}
+.msg-content p{margin:0.7em 0;}
+.msg-content a{color:var(--link);text-decoration:underline;text-decoration-color:rgba(176,81,47,0.35);}
+.msg-content a:hover{text-decoration-color:var(--link);}
+.msg-content ul,.msg-content ol{margin:0.6em 0;padding-left:1.4em;}
+.msg-content li{margin:0.25em 0;}
+.msg-content blockquote{
+  margin:0.8em 0;padding:0.2em 1em;border-left:3px solid var(--accent);
+  color:var(--text-muted);background:var(--bg-panel);border-radius:0 6px 6px 0;
+}
+.msg-content hr{border:none;border-top:1px solid var(--border);margin:1.2em 0;}
+.msg-content img{max-width:100%;border-radius:8px;}
+.msg-content table{border-collapse:collapse;width:100%;margin:0.8em 0;font-size:0.92em;display:block;overflow-x:auto;}
+.msg-content th,.msg-content td{border:1px solid var(--border);padding:8px 12px;text-align:left;}
+.msg-content th{background:var(--bg-panel);font-weight:600;}
+.msg-content code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  background:var(--inline-code-bg);color:var(--text);padding:0.15em 0.4em;
+  border-radius:5px;font-size:0.88em;
+}
+
+/* Code block component */
+.code-block{
+  position:relative;margin:1em 0;border-radius:10px;
+  border:1px solid var(--code-border);background:var(--code-bg);box-shadow:var(--shadow);
+}
+.copy-btn{
+  position:absolute;top:10px;right:10px;
+  opacity:0;visibility:hidden;transform:translateY(-4px);
+  transition:opacity .15s ease, transform .15s ease, background .15s ease;
+  background:var(--bg);border:1px solid var(--code-border);color:var(--code-text);
+  font-size:12px;padding:5px 10px;border-radius:6px;display:flex;align-items:center;gap:6px;
+  cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);z-index:5;
+}
+.code-block:hover .copy-btn, .copy-btn:focus-visible{
+  opacity:1;visibility:visible;transform:translateY(0);
+}
+.copy-btn:hover{background:rgba(146,64,42,0.08);}
+.copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
+.copy-btn svg{width:13px;height:13px;flex:none;}
+.code-block pre{margin:0;padding:16px 18px;overflow-x:auto;}
+.msg-content .code-block code{
+  background:none;color:var(--text);padding:0;border-radius:0;
+  font-size:0.86em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  line-height:1.55;white-space:pre;
+}
+
+/* Inline code copy component */
+.inline-code-wrap{position:relative;display:inline-block;vertical-align:baseline;}
+.inline-copy-btn{
+  position:absolute;top:-6px;right:-6px;
+  opacity:0;visibility:hidden;pointer-events:none;transform:scale(0.92);
+  transition:opacity .12s ease, transform .12s ease, background .12s ease;
+  background:var(--bg);color:var(--inline-code-text);border:1px solid var(--code-border);
+  border-radius:999px;padding:2px 7px 2px 5px;font-size:10.5px;font-weight:600;
+  display:flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap;z-index:20;
+  box-shadow:0 1px 4px rgba(0,0,0,0.12);
+}
+.inline-copy-btn svg{width:10px;height:10px;flex:none;}
+.inline-code-wrap:hover .inline-copy-btn{opacity:1;visibility:visible;pointer-events:auto;transform:scale(1);}
+.inline-copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
+
+/* Whole-message copy button */
+.msg-wrap{margin-bottom:1.1em;}
+.msg-footer{display:flex;align-items:center;gap:10px;margin-top:4px;min-height:24px;}
+.msg-copy-btn{
+  opacity:0;visibility:hidden;transform:translateY(-2px);
+  transition:opacity .15s ease, transform .15s ease, background .15s ease;
+  background:var(--bg);border:1px solid var(--code-border);color:var(--code-text);
+  font-size:12px;padding:4px 9px;border-radius:6px;display:flex;align-items:center;gap:6px;
+  cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);order:1;
+}
+.msg-wrap:hover .msg-copy-btn, .msg-copy-btn:focus-visible{
+  opacity:1;visibility:visible;transform:translateY(0);
+}
+.msg-copy-btn:hover{background:rgba(146,64,42,0.08);}
+.msg-copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
+.msg-copy-btn svg{width:12px;height:12px;flex:none;}
+.msg-time{font-size:11px;color:var(--text-muted);order:2;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg class="icon" viewBox="60 25 210 210" fill="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M70,90 L200,90 L200,220 L70,220 Z"/><path d="M70,90 L130,40 L260,40 L200,90"/><path d="M260,40 L260,170 L200,220"/></g><text x="135" y="155" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="105" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="central">C</text></svg>
+    <span>Codeblocks</span>
+    <span id="currentCode" class="code-pill" style="display:none"></span>
+  </div>
+  <div class="actions" id="headerActions" style="display:none">
+    <button class="btn secondary" id="leaveBtn" type="button">Leave</button>
+  </div>
+</header>
+
+<!-- Join screen -->
+<div class="join-wrap" id="joinView">
+  <div class="join-card">
+    <h1>Join a session</h1>
+    <p>Enter the session code.</p>
+    <form id="joinForm">
+      <label for="code">Session code</label>
+      <input id="code" type="text" inputmode="latin" autocomplete="off" maxlength="6" required>
+      <button class="btn" type="submit">Join</button>
+      <p class="join-error" id="joinError"></p>
+    </form>
+  </div>
+</div>
+
+<!-- Stream -->
+<div id="stage">
+  <div class="stream" id="stream"></div>
+</div>
+
+<!-- Firebase SDK (compat) — no auth SDK needed on the student page -->
+<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-database-compat.js"></script>
+
+<script>
+/* ============================================================
+   CONFIG — paste the SAME Firebase web config as the teacher page.
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDLnAkawIL9qH5ZzxPUrejCzeHPLiXvzao",
+  authDomain: "codeblocks-io.firebaseapp.com",
+  databaseURL: "https://codeblocks-io-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "codeblocks-io",
+  storageBucket: "codeblocks-io.firebasestorage.app",
+  messagingSenderId: "718423620696",
+  appId: "1:718423620696:web:9bf3944475068c1cc3de2d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ============================================================
+   Markdown rendering engine (verbatim, shared with teacher page)
+   ============================================================ */
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function splitTableRow(line){
+  let l = line.trim();
+  if(l.startsWith("|")) l = l.slice(1);
+  if(l.endsWith("|")) l = l.slice(0,-1);
+  return l.split(/(?<!\\)\|/).map(c => c.replace(/\\\|/g,"|"));
+}
+
+// Blocks dangerous URL schemes (javascript:, data:, vbscript:) in links/images.
+function sanitizeUrl(url){
+  let stripped = "";
+  for(let k = 0; k < url.length; k++){
+    const code = url.charCodeAt(k);
+    if(code > 32) stripped += url[k];
+  }
+  if(/^(javascript|data|vbscript):/i.test(stripped)) return "#";
+  return url;
+}
+
+function inline(text){
+  const codes = [];
+  text = text.replace(/`([^`]+)`/g, function(m, c){
+    codes.push(escapeHtml(c));
+    return "@@IC" + (codes.length-1) + "@@";
+  });
+  text = escapeHtml(text);
+  text = text.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g, function(m, alt, src, title){
+    return '<img alt="' + alt + '" src="' + sanitizeUrl(src) + '"' + (title ? ' title="' + title + '"' : '') + '>';
+  });
+  text = text.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g, function(m, label, href, title){
+    return '<a href="' + sanitizeUrl(href) + '"' + (title ? ' title="' + title + '"' : '') + ' target="_blank" rel="noopener noreferrer">' + label + '</a>';
+  });
+  text = text.replace(/&lt;((https?:\/\/|mailto:)[^&\s]+)&gt;/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+  text = text.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+  text = text.replace(/(?<![A-Za-z0-9_])_([^_\n]+)_(?![A-Za-z0-9_])/g, "<em>$1</em>");
+  text = text.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+  text = text.replace(/ {2,}\n/g, "<br>\n");
+  text = text.replace(/@@IC(\d+)@@/g, function(m, idx){
+    return '<span class="inline-code-wrap"><code>' + codes[+idx] + '</code>' +
+      '<button class="inline-copy-btn" type="button" data-label="Copy" aria-label="Copy code">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+      '<span class="copy-label">Copy</span></button></span>';
+  });
+  return text;
+}
+
+function parseListBlock(blockLines){
+  const itemRe = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/;
+  const root = { indent:-1, children:[] };
+  const stack = [root];
+  for(const raw of blockLines){
+    const m = raw.match(itemRe);
+    if(!m){
+      const top = stack[stack.length-1];
+      if(top !== root && /\S/.test(raw)) top.content += " " + raw.trim();
+      continue;
+    }
+    const indent = m[1].length;
+    const ordered = /\d/.test(m[2]);
+    const content = m[3];
+    const node = { indent, ordered, content, children:[] };
+    while(stack.length > 1 && indent <= stack[stack.length-1].indent) stack.pop();
+    stack[stack.length-1].children.push(node);
+    stack.push(node);
+  }
+  function render(node){
+    if(!node.children.length) return "";
+    const ordered = node.children[0].ordered;
+    const tag = ordered ? "ol" : "ul";
+    let out = "<" + tag + ">";
+    for(const c of node.children){
+      out += "<li>" + inline(c.content) + render(c) + "</li>";
+    }
+    out += "</" + tag + ">";
+    return out;
+  }
+  return render(root);
+}
+
+function isListBreaker(line){
+  return /^(#{1,6})\s+/.test(line) ||
+    /^ {0,3}([-*_])(\s*\1){2,}\s*$/.test(line) ||
+    /^ {0,3}>\s?/.test(line) ||
+    /^@@CB\d+@@$/.test(line);
+}
+
+function renderMarkdown(src){
+  src = src.replace(/\r\n?/g, "\n");
+  const codeBlocks = [];
+  src = src.replace(/^```([^\n`]*)\n([\s\S]*?)\n```[ \t]*$/gm, function(m, lang, code){
+    const idx = codeBlocks.length;
+    codeBlocks.push({ lang: lang.trim(), code: code });
+    return "@@CB" + idx + "@@";
+  });
+  const lines = src.split("\n");
+  let html = "";
+  let i = 0;
+  let para = [];
+  function flushPara(){
+    if(para.length){ html += "<p>" + inline(para.join("\n")) + "</p>\n"; para = []; }
+  }
+  while(i < lines.length){
+    const line = lines[i];
+    if(/^\s*$/.test(line)){ flushPara(); i++; continue; }
+    const cb = line.match(/^@@CB(\d+)@@$/);
+    if(cb){
+      flushPara();
+      const block = codeBlocks[+cb[1]];
+      const lang = block.lang;
+      const langClass = lang ? ' class="language-' + escapeHtml(lang) + '"' : "";
+      html += '<div class="code-block">' +
+        '<button class="copy-btn" type="button" data-label="Copy">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+        '<span class="copy-label">Copy</span></button>' +
+        '<pre><code' + langClass + '>' + escapeHtml(block.code) + '</code></pre></div>\n';
+      i++; continue;
+    }
+    const h = line.match(/^(#{1,6})\s+(.*?)\s*#*\s*$/);
+    if(h){ flushPara(); const level = h[1].length; html += "<h" + level + ">" + inline(h[2]) + "</h" + level + ">\n"; i++; continue; }
+    if(/^ {0,3}([-*_])(\s*\1){2,}\s*$/.test(line)){ flushPara(); html += "<hr>\n"; i++; continue; }
+    if(/^ {0,3}>\s?/.test(line)){
+      flushPara();
+      const bq = [];
+      while(i < lines.length && /^ {0,3}>\s?/.test(lines[i])){ bq.push(lines[i].replace(/^ {0,3}>\s?/, "")); i++; }
+      html += "<blockquote>" + renderMarkdown(bq.join("\n")) + "</blockquote>\n";
+      continue;
+    }
+    if(/^\s*\|?.+\|.*$/.test(line) && lines[i+1] && /^\s*\|?[\s:|-]+\|?[\s:|-]*$/.test(lines[i+1]) && /-/.test(lines[i+1])){
+      flushPara();
+      const headerCells = splitTableRow(line);
+      const alignRow = splitTableRow(lines[i+1]);
+      const aligns = alignRow.map(function(c){
+        const t = c.trim();
+        if(/^:-+:$/.test(t)) return "center";
+        if(/^-+:$/.test(t)) return "right";
+        if(/^:-+$/.test(t)) return "left";
+        return "";
+      });
+      i += 2;
+      const rows = [];
+      while(i < lines.length && /\|/.test(lines[i]) && !/^\s*$/.test(lines[i])){ rows.push(splitTableRow(lines[i])); i++; }
+      html += "<table><thead><tr>" + headerCells.map(function(c, idx){
+        const a = aligns[idx];
+        return "<th" + (a ? ' style="text-align:' + a + '"' : "") + ">" + inline(c.trim()) + "</th>";
+      }).join("") + "</tr></thead>";
+      if(rows.length){
+        html += "<tbody>" + rows.map(function(r){
+          return "<tr>" + r.map(function(c, idx){
+            const a = aligns[idx];
+            return "<td" + (a ? ' style="text-align:' + a + '"' : "") + ">" + inline((c||"").trim()) + "</td>";
+          }).join("") + "</tr>";
+        }).join("") + "</tbody>";
+      }
+      html += "</table>\n";
+      continue;
+    }
+    if(/^\s*([-*+]|\d+[.)])\s+/.test(line)){
+      flushPara();
+      const block = [];
+      let topOrdered = null;
+      while(i < lines.length){
+        const cur = lines[i];
+        if(/^\s*$/.test(cur)) break;
+        const m = cur.match(/^(\s*)([-*+]|\d+[.)])\s+/);
+        if(m){
+          const indent = m[1].length;
+          const ordered = /\d/.test(m[2]);
+          if(indent === 0){
+            if(topOrdered === null) topOrdered = ordered;
+            else if(ordered !== topOrdered) break;
+          }
+          block.push(cur); i++;
+        } else if(block.length && !isListBreaker(cur)){ block.push(cur); i++; }
+        else break;
+      }
+      html += parseListBlock(block) + "\n";
+      continue;
+    }
+    if(para.length === 0 && lines[i+1] !== undefined && /^ {0,3}(=+|-+)\s*$/.test(lines[i+1])){
+      const level = lines[i+1].trim()[0] === "=" ? 1 : 2;
+      html += "<h" + level + ">" + inline(line.trim()) + "</h" + level + ">\n";
+      i += 2; continue;
+    }
+    para.push(line); i++;
+  }
+  flushPara();
+  return html;
+}
+
+/* ============================================================
+   Copy-to-clipboard (verbatim, shared with teacher page)
+   ============================================================ */
+const CHECK_SVG = '<polyline points="20 6 9 17 4 12"></polyline>';
+
+function copyText(text, btn){
+  function done(){
+    const label = btn.querySelector(".copy-label");
+    const svg = btn.querySelector("svg");
+    const prevSvg = svg ? svg.innerHTML : null;
+    btn.classList.add("copied");
+    if(label) label.textContent = "Copied!";
+    if(svg) svg.innerHTML = CHECK_SVG;
+    setTimeout(function(){
+      btn.classList.remove("copied");
+      if(label) label.textContent = "Copy";
+      if(svg && prevSvg !== null) svg.innerHTML = prevSvg;
+    }, 1200);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text, done); });
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done){
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  document.body.removeChild(ta);
+  done();
+}
+
+/* ============================================================
+   Shared rendering: append a message + copy delegation
+   ============================================================ */
+const messageStore = new Map(); // msgId -> raw text
+
+function pad2(n){ return n < 10 ? "0" + n : "" + n; }
+function fmtTime(ts){
+  const d = ts ? new Date(ts) : new Date();
+  return pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+}
+
+function appendMessage(container, id, rawText, ts){
+  messageStore.set(id, rawText);
+  const wrap = document.createElement("div");
+  wrap.className = "msg-wrap";
+  wrap.dataset.msgId = id;
+  wrap.innerHTML =
+    '<div class="msg-content">' + renderMarkdown(rawText) + '</div>' +
+    '<div class="msg-footer">' +
+      '<button class="msg-copy-btn" type="button" data-label="Copy" aria-label="Copy message">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+        '<rect x="9" y="9" width="12" height="12" rx="2"></rect>' +
+        '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+        '<span class="copy-label">Copy</span>' +
+      '</button>' +
+      '<time class="msg-time">' + fmtTime(ts) + '</time>' +
+    '</div>';
+  container.appendChild(wrap);
+}
+
+function wireCopyDelegation(container){
+  container.addEventListener("click", function(e){
+    const btn = e.target.closest(".copy-btn, .inline-copy-btn, .msg-copy-btn");
+    if(!btn) return;
+    if(btn.classList.contains("copy-btn")){
+      const codeEl = btn.closest(".code-block").querySelector("code");
+      if(codeEl) copyText(codeEl.textContent, btn);
+    } else if(btn.classList.contains("inline-copy-btn")){
+      const codeEl = btn.previousElementSibling;
+      if(codeEl) copyText(codeEl.textContent, btn);
+    } else if(btn.classList.contains("msg-copy-btn")){
+      const wrap = btn.closest(".msg-wrap");
+      const raw = messageStore.get(wrap.dataset.msgId);
+      if(raw !== undefined) copyText(raw, btn);
+    }
+  });
+}
+
+/* ============================================================
+   Student (read-only) logic
+   ============================================================ */
+const joinView   = document.getElementById("joinView");
+const stage      = document.getElementById("stage");
+const headerActions = document.getElementById("headerActions");
+const currentCodeEl = document.getElementById("currentCode");
+const stream     = document.getElementById("stream");
+const codeInput  = document.getElementById("code");
+const joinError  = document.getElementById("joinError");
+
+let currentSession = null;
+let messagesRef = null;
+let messagesHandler = null;
+let gotFirst = false;
+
+wireCopyDelegation(stream);
+
+function showWaiting(){
+  gotFirst = false;
+  stream.innerHTML = '<div class="stream-hint">Waiting for messages…</div>';
+}
+
+function normalizeCode(raw){
+  return (raw || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+}
+
+function join(rawCode){
+  const code = normalizeCode(rawCode);
+  joinError.textContent = "";
+  if(code.length < 6){ joinError.textContent = "Enter the full 6-character code."; return; }
+  // One-time existence check on meta.
+  db.ref("sessions/" + code + "/meta").once("value").then(function(snap){
+    if(!snap.exists()){ joinError.textContent = "Session not found."; return; }
+    enterSession(code);
+  }).catch(function(err){
+    joinError.textContent = "Could not join: " + (err && err.message ? err.message : "error");
+  });
+}
+
+function enterSession(code){
+  currentSession = code;
+  messageStore.clear();
+  currentCodeEl.textContent = code;
+  currentCodeEl.style.display = "inline-block";
+  headerActions.style.display = "flex";
+  joinView.style.display = "none";
+  stage.classList.add("active");
+  showWaiting();
+  // Reflect the session in the URL so a refresh rejoins.
+  history.replaceState(null, "", "?session=" + code);
+
+  messagesRef = db.ref("sessions/" + code + "/messages").orderByKey();
+  messagesHandler = messagesRef.on("child_added", function(snap){
+    if(!gotFirst){ stream.innerHTML = ""; gotFirst = true; }
+    const v = snap.val() || {};
+    appendMessage(stream, snap.key, v.text != null ? v.text : "", v.ts);
+    stream.scrollTop = stream.scrollHeight;
+  });
+}
+
+function leave(){
+  if(messagesRef && messagesHandler){ messagesRef.off("child_added", messagesHandler); }
+  messagesRef = null; messagesHandler = null;
+  currentSession = null;
+  messageStore.clear();
+  stream.innerHTML = "";
+  stage.classList.remove("active");
+  headerActions.style.display = "none";
+  currentCodeEl.style.display = "none";
+  joinView.style.display = "flex";
+  history.replaceState(null, "", location.pathname);
+  codeInput.value = "";
+  codeInput.focus();
+}
+
+document.getElementById("joinForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  join(codeInput.value);
+});
+document.getElementById("leaveBtn").addEventListener("click", leave);
+
+// Auto-join via ?session=CODE
+(function(){
+  const params = new URLSearchParams(location.search);
+  const s = params.get("session");
+  if(s){
+    codeInput.value = normalizeCode(s);
+    join(s);
+  }
+})();
+</script>
+</body>
+</html>
