@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Push Codeblocks</title>
+<title>Post Codeblocks</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%2260%2025%20210%20210%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23C2603E%22%20stroke-width%3D%2211%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M70%2C90%20L200%2C90%20L200%2C220%20L70%2C220%20Z%22%2F%3E%3Cpath%20d%3D%22M70%2C90%20L130%2C40%20L260%2C40%20L200%2C90%22%2F%3E%3Cpath%20d%3D%22M260%2C40%20L260%2C170%20L200%2C220%22%2F%3E%3C%2Fg%3E%3Ctext%20x%3D%22135%22%20y%3D%22155%22%20font-family%3D%22monospace%22%20font-size%3D%22105%22%20font-weight%3D%22bold%22%20fill%3D%22%23C2603E%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22central%22%3EC%3C%2Ftext%3E%3C%2Fsvg%3E">
 <style>
 :root{
@@ -114,34 +114,75 @@ button{font-family:inherit;cursor:pointer;}
 .sidebar-head{padding:14px 16px 8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);}
 .session-list{flex:1;overflow-y:auto;padding:0 8px 12px;}
 .session-item{
-  display:block;width:100%;text-align:left;background:none;border:none;
-  padding:9px 10px;border-radius:8px;font-size:13px;color:var(--text);
-  font-family:inherit;margin-bottom:2px;
+  display:flex;align-items:center;gap:4px;width:100%;
+  padding:6px 6px 6px 10px;border-radius:8px;margin-bottom:2px;border:1px solid transparent;
 }
 .session-item:hover{background:var(--bg);}
 .session-item.active{background:var(--bg);border:1px solid var(--border);}
-.session-item .sn{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.session-item .sc{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;letter-spacing:1px;}
-.session-item .dt{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;}
+.session-main{
+  flex:1;min-width:0;text-align:left;background:none;border:none;
+  font-family:inherit;font-size:13px;color:var(--text);cursor:pointer;padding:3px 0;
+}
+.session-main .sn{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.session-main .sc{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;letter-spacing:1px;}
+.session-main .dt{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;}
+.session-tools{display:flex;gap:2px;flex:none;opacity:0;transition:opacity .12s ease;}
+.session-item:hover .session-tools, .session-item.active .session-tools{opacity:1;}
+.tool-btn{
+  display:flex;align-items:center;justify-content:center;width:26px;height:26px;
+  background:none;border:none;border-radius:6px;color:var(--text-muted);cursor:pointer;
+}
+.tool-btn:hover{background:var(--bg-panel);color:var(--text);}
+.tool-btn.danger:hover{background:rgba(194,96,62,0.12);color:var(--accent);}
+.tool-btn svg{width:15px;height:15px;}
 .session-empty{padding:10px;font-size:12.5px;color:var(--text-muted);}
 
 .main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
 .main-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;padding:24px;text-align:center;}
-.stream{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+/* Only the messages scroll; the composer below stays pinned and always visible. */
+.stream{flex:1;min-height:0;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .composer{
-  border-top:1px solid var(--border);background:var(--bg);
-  padding:12px 16px;display:flex;gap:10px;align-items:flex-end;
+  flex:none;border-top:1px solid var(--border);background:var(--bg);
+  padding:12px 24px;display:flex;justify-content:center;
 }
+.composer-inner{
+  width:100%;max-width:min(var(--content-width,760px),100%);
+  display:flex;flex-direction:column;gap:8px;
+}
+/* The edit box spans the same width as the messages (and tracks the slider). */
 .composer textarea{
-  flex:1;resize:vertical;height:200px;min-height:80px;max-height:70vh;
+  width:100%;resize:vertical;height:200px;min-height:80px;max-height:70vh;
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
-  font-size:13.5px;line-height:1.5;padding:10px 12px;
+  font-size:15px;line-height:1.55;padding:11px 13px;
   border:1px solid var(--border);border-radius:10px;background:var(--bg-panel);color:var(--text);
 }
 .composer textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
-.composer .send-col{display:flex;flex-direction:column;gap:6px;align-items:stretch;}
-.composer .hint{font-size:11px;color:var(--text-muted);text-align:center;}
+.composer-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;}
+.composer .hint{font-size:11px;color:var(--text-muted);}
 .stream-hint{color:var(--text-muted);font-size:14px;padding:8px 2px;}
+
+/* Themed modal (replaces native prompt/confirm) */
+.modal-overlay{
+  position:fixed;inset:0;z-index:100;display:none;
+  align-items:center;justify-content:center;padding:24px;
+  background:rgba(31,30,29,0.38);
+}
+.modal-overlay.open{display:flex;}
+.modal-card{
+  width:100%;max-width:380px;background:var(--bg);color:var(--text);
+  border:1px solid var(--border);border-radius:14px;padding:22px 22px 18px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.18);
+}
+.modal-card h2{font-size:16px;margin:0 0 6px;}
+.modal-card p{font-size:13.5px;color:var(--text-muted);margin:0 0 16px;line-height:1.5;}
+.modal-card input{
+  width:100%;padding:10px 12px;font-size:14px;font-family:inherit;
+  border:1px solid var(--border);border-radius:8px;background:var(--bg-panel);color:var(--text);margin:0 0 16px;
+}
+.modal-card input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;}
+.btn.danger{background:var(--accent);}
+.btn.danger:hover{background:var(--accent-hover);}
 
 /* Message typography */
 .msg-content{line-height:1.65;font-size:15.5px;}
@@ -243,7 +284,7 @@ button{font-family:inherit;cursor:pointer;}
 <header>
   <div class="brand">
     <svg class="icon" viewBox="60 25 210 210" fill="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M70,90 L200,90 L200,220 L70,220 Z"/><path d="M70,90 L130,40 L260,40 L200,90"/><path d="M260,40 L260,170 L200,220"/></g><text x="135" y="155" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="105" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="central">C</text></svg>
-    <span id="titleLabel">Push Codeblocks</span>
+    <span id="titleLabel">Post Codeblocks</span>
   </div>
   <div class="width-control" id="widthControl" style="display:none">
     <span class="width-label">Narrow</span>
@@ -285,11 +326,26 @@ button{font-family:inherit;cursor:pointer;}
     <div class="main-empty" id="mainEmpty">Open a new session, or pick one from the left to resume posting.</div>
     <div class="stream" id="stream" style="display:none"></div>
     <div class="composer" id="composer" style="display:none">
-      <textarea id="composerInput" placeholder="Type a message — plain text or Markdown (fenced ``` code blocks supported)…"></textarea>
-      <div class="send-col">
-        <button class="btn" id="postBtn" type="button">Post</button>
-        <span class="hint">Ctrl+Enter</span>
+      <div class="composer-inner">
+        <textarea id="composerInput" placeholder="Type a message — plain text or Markdown (fenced ``` code blocks supported)…"></textarea>
+        <div class="composer-actions">
+          <span class="hint">Ctrl+Enter to post</span>
+          <button class="btn" id="postBtn" type="button">Post</button>
+        </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Themed modal (create / rename / delete) -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle"></h2>
+    <p id="modalMsg" style="display:none"></p>
+    <input id="modalInput" type="text" style="display:none">
+    <div class="modal-actions">
+      <button class="btn secondary" id="modalCancel" type="button">Cancel</button>
+      <button class="btn" id="modalOk" type="button">OK</button>
     </div>
   </div>
 </div>
@@ -630,13 +686,110 @@ const stream      = document.getElementById("stream");
 const composer    = document.getElementById("composer");
 const composerInput = document.getElementById("composerInput");
 
-const APP_TITLE = "Push Codeblocks";
+const APP_TITLE = "Post Codeblocks";
 let activeSession = null;      // current session id
 let messagesRef = null;        // current messages ref (to .off())
 let messagesHandler = null;    // current child_added handler
 const sessionMeta = {};        // id -> { name, createdAt } (kept in sync by loadSessions)
 
 wireCopyDelegation(stream);
+
+/* ============================================================
+   Themed modal (replaces native prompt/confirm to match the design)
+   openModal({ title, message, input, inputValue, placeholder, okLabel,
+   danger, onOk }) -> onOk(value) fires on confirm; value is the trimmed
+   input string (or "" when there is no input field).
+   ============================================================ */
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const modalMsg = document.getElementById("modalMsg");
+const modalInput = document.getElementById("modalInput");
+const modalOk = document.getElementById("modalOk");
+const modalCancel = document.getElementById("modalCancel");
+let modalOnOk = null;
+
+function closeModal(){
+  modalOverlay.classList.remove("open");
+  modalOnOk = null;
+}
+function openModal(opts){
+  modalTitle.textContent = opts.title || "";
+  if(opts.message){ modalMsg.textContent = opts.message; modalMsg.style.display = "block"; }
+  else { modalMsg.style.display = "none"; }
+  if(opts.input){
+    modalInput.style.display = "block";
+    modalInput.value = opts.inputValue || "";
+    modalInput.placeholder = opts.placeholder || "";
+  } else {
+    modalInput.style.display = "none";
+  }
+  modalOk.textContent = opts.okLabel || "OK";
+  modalOk.classList.toggle("danger", !!opts.danger);
+  modalOnOk = opts.onOk || null;
+  modalOverlay.classList.add("open");
+  setTimeout(function(){ (opts.input ? modalInput : modalOk).focus(); }, 30);
+}
+function confirmModal(){
+  const val = modalInput.style.display === "none" ? "" : modalInput.value.trim();
+  const cb = modalOnOk;
+  closeModal();
+  if(cb) cb(val);
+}
+modalOk.addEventListener("click", confirmModal);
+modalCancel.addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", function(e){ if(e.target === modalOverlay) closeModal(); });
+modalInput.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); confirmModal(); } });
+document.addEventListener("keydown", function(e){ if(e.key === "Escape" && modalOverlay.classList.contains("open")) closeModal(); });
+
+// Rename any session by id (used by the heading and the sidebar pencil).
+function renameSession(id){
+  const current = (sessionMeta[id] && sessionMeta[id].name) || "";
+  openModal({
+    title: "Rename session",
+    input: true, inputValue: current, placeholder: "Session name (optional)",
+    okLabel: "Save",
+    onOk: function(name){
+      db.ref("sessions/" + id + "/meta/name").set(name || null)
+        .then(function(){
+          sessionMeta[id] = sessionMeta[id] || {};
+          sessionMeta[id].name = name;
+          if(id === activeSession) updateHeading();
+        })
+        .catch(function(err){ alert("Rename failed: " + (err && err.message)); });
+    }
+  });
+}
+
+// Delete a session (with confirmation).
+function deleteSession(id){
+  const label = (sessionMeta[id] && sessionMeta[id].name) || id;
+  openModal({
+    title: "Delete session",
+    message: 'Do you really want to delete this session' + (label ? ' “' + label + '”' : '') + '? This removes all of its messages and cannot be undone.',
+    okLabel: "Delete", danger: true,
+    onOk: function(){
+      // Clear both child nodes in one atomic update. (Removing the whole
+      // /sessions/{id} node directly would be denied — the rules only grant
+      // write at .../meta and .../messages, not at the {id} level. With both
+      // children gone the empty {id} node ceases to exist.)
+      db.ref("sessions/" + id).update({ meta: null, messages: null })
+        .then(function(){
+          if(id === activeSession){
+            detachMessages();
+            activeSession = null;
+            messageStore.clear();
+            stream.innerHTML = "";
+            stream.style.display = "none";
+            composer.style.display = "none";
+            currentCodeEl.style.display = "none";
+            mainEmpty.style.display = "flex";
+            updateHeading();
+          }
+        })
+        .catch(function(err){ alert("Delete failed: " + (err && err.message)); });
+    }
+  });
+}
 
 // Show the active session's name (falling back to its code) in the heading.
 function updateHeading(){
@@ -703,6 +856,9 @@ function loadSessions(){
   });
 }
 
+const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+const TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
+
 function renderSessionList(items){
   if(!items.length){
     sessionListEl.innerHTML = '<div class="session-empty">No sessions yet. Click “Open new session”.</div>';
@@ -710,21 +866,33 @@ function renderSessionList(items){
   }
   sessionListEl.innerHTML = "";
   items.forEach(function(it){
-    const b = document.createElement("button");
-    b.className = "session-item" + (it.id === activeSession ? " active" : "");
-    b.type = "button";
-    b.dataset.sessionId = it.id;
+    const row = document.createElement("div");
+    row.className = "session-item" + (it.id === activeSession ? " active" : "");
+    row.dataset.sessionId = it.id;
     const dt = it.createdAt ? new Date(it.createdAt).toLocaleString() : "";
+    const main = document.createElement("button");
+    main.className = "session-main";
+    main.type = "button";
     if(it.name){
-      b.innerHTML = '<span class="sn"></span><span class="dt"><span class="sc"></span> · ' + dt + '</span>';
-      b.querySelector(".sn").textContent = it.name;
-      b.querySelector(".sc").textContent = it.id;
+      main.innerHTML = '<span class="sn"></span><span class="dt"><span class="sc"></span> · ' + dt + '</span>';
+      main.querySelector(".sn").textContent = it.name;
+      main.querySelector(".sc").textContent = it.id;
     } else {
-      b.innerHTML = '<span class="sn sc"></span><span class="dt">' + dt + '</span>';
-      b.querySelector(".sn").textContent = it.id;
+      main.innerHTML = '<span class="sn sc"></span><span class="dt">' + dt + '</span>';
+      main.querySelector(".sn").textContent = it.id;
     }
-    b.addEventListener("click", function(){ openSession(it.id); });
-    sessionListEl.appendChild(b);
+    main.addEventListener("click", function(){ openSession(it.id); });
+    const tools = document.createElement("div");
+    tools.className = "session-tools";
+    tools.innerHTML =
+      '<button class="tool-btn" type="button" title="Rename" aria-label="Rename session">' + PENCIL_SVG + '</button>' +
+      '<button class="tool-btn danger" type="button" title="Delete" aria-label="Delete session">' + TRASH_SVG + '</button>';
+    const btns = tools.querySelectorAll(".tool-btn");
+    btns[0].addEventListener("click", function(){ renameSession(it.id); });
+    btns[1].addEventListener("click", function(){ deleteSession(it.id); });
+    row.appendChild(main);
+    row.appendChild(tools);
+    sessionListEl.appendChild(row);
   });
 }
 
@@ -759,30 +927,25 @@ function openSession(id){
 }
 
 document.getElementById("newSessionBtn").addEventListener("click", function(){
-  const name = (prompt("Session name (optional):", "") || "").trim();
-  const id = generateSessionCode();
-  const meta = { createdAt: firebase.database.ServerValue.TIMESTAMP };
-  if(name) meta.name = name;
-  sessionMeta[id] = { name: name, createdAt: Date.now() };
-  db.ref("sessions/" + id + "/meta").set(meta)
-    .then(function(){ openSession(id); })
-    .catch(function(err){ alert("Could not create session: " + (err && err.message)); });
+  openModal({
+    title: "New session",
+    input: true, inputValue: "", placeholder: "Session name (optional)",
+    okLabel: "Create",
+    onOk: function(name){
+      const id = generateSessionCode();
+      const meta = { createdAt: firebase.database.ServerValue.TIMESTAMP };
+      if(name) meta.name = name;
+      sessionMeta[id] = { name: name, createdAt: Date.now() };
+      db.ref("sessions/" + id + "/meta").set(meta)
+        .then(function(){ openSession(id); })
+        .catch(function(err){ alert("Could not create session: " + (err && err.message)); });
+    }
+  });
 });
 
 // Click the heading to (re)name the active session.
 titleLabel.addEventListener("click", function(){
-  if(!activeSession) return;
-  const current = (sessionMeta[activeSession] && sessionMeta[activeSession].name) || "";
-  const name = prompt("Session name:", current);
-  if(name === null) return; // cancelled
-  const trimmed = name.trim();
-  db.ref("sessions/" + activeSession + "/meta/name").set(trimmed || null)
-    .then(function(){
-      sessionMeta[activeSession] = sessionMeta[activeSession] || {};
-      sessionMeta[activeSession].name = trimmed;
-      updateHeading();
-    })
-    .catch(function(err){ alert("Rename failed: " + (err && err.message)); });
+  if(activeSession) renameSession(activeSession);
 });
 
 // Small helper: flash a button's text label, then restore it.
