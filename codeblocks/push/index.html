@@ -43,15 +43,35 @@ header{
   gap:16px; padding:12px 24px;
   background:var(--bg); border-bottom:1px solid var(--border);
 }
-.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;color:var(--text);min-width:0;}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;color:var(--text);min-width:0;flex:none;}
 .brand .icon{height:1.85em;width:auto;color:var(--accent);flex:none;}
-.brand .code-pill{
+.brand #titleLabel{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:32vw;}
+.brand #titleLabel.renamable{cursor:pointer;}
+.brand #titleLabel.renamable:hover{text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:3px;}
+.code-pill{
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   font-size:13px;font-weight:700;letter-spacing:1px;
   background:var(--bg-panel);border:1px solid var(--border);
   padding:3px 10px;border-radius:6px;color:var(--code-text);
 }
-.actions{display:flex;align-items:center;gap:8px;flex:none;}
+.actions{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end;}
+
+/* Page-width slider */
+.width-control{display:flex;align-items:center;gap:8px;flex:1;max-width:280px;justify-content:center;}
+.width-control .width-label{font-size:11px;color:var(--text-muted);white-space:nowrap;flex:none;}
+#widthSlider{
+  flex:1;-webkit-appearance:none;appearance:none;height:4px;min-width:60px;
+  border-radius:999px;background:var(--border);outline:none;cursor:pointer;
+}
+#widthSlider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:2px solid var(--bg);box-shadow:0 0 0 1px var(--code-border);
+}
+#widthSlider::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;background:var(--accent);cursor:pointer;
+  border:2px solid var(--bg);box-shadow:0 0 0 1px var(--code-border);
+}
+@media (max-width:820px){ .width-control{display:none !important;} }
 
 /* Buttons */
 button{font-family:inherit;cursor:pointer;}
@@ -100,19 +120,20 @@ button{font-family:inherit;cursor:pointer;}
 }
 .session-item:hover{background:var(--bg);}
 .session-item.active{background:var(--bg);border:1px solid var(--border);}
+.session-item .sn{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .session-item .sc{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;letter-spacing:1px;}
 .session-item .dt{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;}
 .session-empty{padding:10px;font-size:12.5px;color:var(--text-muted);}
 
 .main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
 .main-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;padding:24px;text-align:center;}
-.stream{flex:1;overflow-y:auto;padding:20px 24px;}
+.stream{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;}
 .composer{
   border-top:1px solid var(--border);background:var(--bg);
   padding:12px 16px;display:flex;gap:10px;align-items:flex-end;
 }
 .composer textarea{
-  flex:1;resize:vertical;min-height:64px;max-height:280px;
+  flex:1;resize:vertical;height:200px;min-height:80px;max-height:70vh;
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
   font-size:13.5px;line-height:1.5;padding:10px 12px;
   border:1px solid var(--border);border-radius:10px;background:var(--bg-panel);color:var(--text);
@@ -193,15 +214,20 @@ button{font-family:inherit;cursor:pointer;}
 .inline-code-wrap:hover .inline-copy-btn{opacity:1;visibility:visible;pointer-events:auto;transform:scale(1);}
 .inline-copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
 
-/* Whole-message copy button */
-.msg-wrap{margin-bottom:1.1em;}
+/* Message card + whole-message copy button */
+.msg-wrap{
+  width:100%;max-width:min(var(--content-width,760px),100%);
+  padding:12px 16px;border-radius:10px;
+}
+.msg-wrap:nth-child(odd){background:#ffffff;}
+.msg-wrap:nth-child(even){background:var(--bg-panel);}
 .msg-footer{display:flex;align-items:center;gap:10px;margin-top:4px;min-height:24px;}
 .msg-copy-btn{
   opacity:0;visibility:hidden;transform:translateY(-2px);
   transition:opacity .15s ease, transform .15s ease, background .15s ease;
   background:var(--bg);border:1px solid var(--code-border);color:var(--code-text);
   font-size:12px;padding:4px 9px;border-radius:6px;display:flex;align-items:center;gap:6px;
-  cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);order:1;
+  cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);order:2;
 }
 .msg-wrap:hover .msg-copy-btn, .msg-copy-btn:focus-visible{
   opacity:1;visibility:visible;transform:translateY(0);
@@ -209,7 +235,7 @@ button{font-family:inherit;cursor:pointer;}
 .msg-copy-btn:hover{background:rgba(146,64,42,0.08);}
 .msg-copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
 .msg-copy-btn svg{width:12px;height:12px;flex:none;}
-.msg-time{font-size:11px;color:var(--text-muted);order:2;}
+.msg-time{font-size:11px;color:var(--text-muted);order:1;}
 </style>
 </head>
 <body>
@@ -217,10 +243,16 @@ button{font-family:inherit;cursor:pointer;}
 <header>
   <div class="brand">
     <svg class="icon" viewBox="60 25 210 210" fill="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M70,90 L200,90 L200,220 L70,220 Z"/><path d="M70,90 L130,40 L260,40 L200,90"/><path d="M260,40 L260,170 L200,220"/></g><text x="135" y="155" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="105" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="central">C</text></svg>
-    <span>Push Codeblocks</span>
-    <span id="currentCode" class="code-pill" style="display:none"></span>
+    <span id="titleLabel">Push Codeblocks</span>
+  </div>
+  <div class="width-control" id="widthControl" style="display:none">
+    <span class="width-label">Narrow</span>
+    <input type="range" id="widthSlider" min="0" max="100" step="1" value="50" aria-label="Message width">
+    <span class="width-label">Wide</span>
   </div>
   <div class="actions" id="headerActions" style="display:none">
+    <span id="currentCode" class="code-pill" style="display:none"></span>
+    <button class="btn secondary" id="copyCodeBtn" type="button">Copy session code</button>
     <button class="btn secondary" id="copyLinkBtn" type="button">Copy join link</button>
     <button class="btn" id="newSessionBtn" type="button">Open new session</button>
     <button class="btn secondary" id="signOutBtn" type="button">Sign out</button>
@@ -330,7 +362,11 @@ function inline(text){
   text = text.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
   text = text.replace(/(?<![A-Za-z0-9_])_([^_\n]+)_(?![A-Za-z0-9_])/g, "<em>$1</em>");
   text = text.replace(/~~([^~]+)~~/g, "<del>$1</del>");
-  text = text.replace(/ {2,}\n/g, "<br>\n");
+  // Preserve every newline as a hard line break (chat-style): a plain-text
+  // message typed across multiple lines keeps those line breaks. Trailing
+  // spaces before a newline are normalised away first.
+  text = text.replace(/ +\n/g, "\n");
+  text = text.replace(/\n/g, "<br>\n");
   text = text.replace(/@@IC(\d+)@@/g, function(m, idx){
     return '<span class="inline-code-wrap"><code>' + codes[+idx] + '</code>' +
       '<button class="inline-copy-btn" type="button" data-label="Copy" aria-label="Copy code">' +
@@ -585,6 +621,8 @@ function generateSessionCode(len = 6){
 const loginView   = document.getElementById("loginView");
 const appView     = document.getElementById("app");
 const headerActions = document.getElementById("headerActions");
+const widthControl = document.getElementById("widthControl");
+const titleLabel  = document.getElementById("titleLabel");
 const currentCodeEl = document.getElementById("currentCode");
 const sessionListEl = document.getElementById("sessionList");
 const mainEmpty   = document.getElementById("mainEmpty");
@@ -592,11 +630,27 @@ const stream      = document.getElementById("stream");
 const composer    = document.getElementById("composer");
 const composerInput = document.getElementById("composerInput");
 
+const APP_TITLE = "Push Codeblocks";
 let activeSession = null;      // current session id
 let messagesRef = null;        // current messages ref (to .off())
 let messagesHandler = null;    // current child_added handler
+const sessionMeta = {};        // id -> { name, createdAt } (kept in sync by loadSessions)
 
 wireCopyDelegation(stream);
+
+// Show the active session's name (falling back to its code) in the heading.
+function updateHeading(){
+  if(activeSession){
+    const name = sessionMeta[activeSession] && sessionMeta[activeSession].name;
+    titleLabel.textContent = name || activeSession;
+    titleLabel.classList.add("renamable");
+    titleLabel.title = "Click to rename this session";
+  } else {
+    titleLabel.textContent = APP_TITLE;
+    titleLabel.classList.remove("renamable");
+    titleLabel.removeAttribute("title");
+  }
+}
 
 /* --- Auth --- */
 document.getElementById("loginForm").addEventListener("submit", function(e){
@@ -619,12 +673,15 @@ auth.onAuthStateChanged(function(user){
     loginView.style.display = "none";
     appView.classList.add("active");
     headerActions.style.display = "flex";
+    widthControl.style.display = "flex";
     loadSessions();
   } else {
     detachMessages();
     activeSession = null;
+    updateHeading();
     appView.classList.remove("active");
     headerActions.style.display = "none";
+    widthControl.style.display = "none";
     currentCodeEl.style.display = "none";
     loginView.style.display = "flex";
     document.getElementById("password").value = "";
@@ -636,10 +693,13 @@ function loadSessions(){
   db.ref("sessions").on("value", function(snap){
     const val = snap.val() || {};
     const items = Object.keys(val).map(function(id){
-      return { id: id, createdAt: (val[id] && val[id].meta && val[id].meta.createdAt) || 0 };
+      const meta = (val[id] && val[id].meta) || {};
+      sessionMeta[id] = { name: meta.name || "", createdAt: meta.createdAt || 0 };
+      return { id: id, name: meta.name || "", createdAt: meta.createdAt || 0 };
     });
     items.sort(function(a, b){ return b.createdAt - a.createdAt; });
     renderSessionList(items);
+    updateHeading(); // reflect a rename into the active heading live
   });
 }
 
@@ -653,8 +713,16 @@ function renderSessionList(items){
     const b = document.createElement("button");
     b.className = "session-item" + (it.id === activeSession ? " active" : "");
     b.type = "button";
+    b.dataset.sessionId = it.id;
     const dt = it.createdAt ? new Date(it.createdAt).toLocaleString() : "";
-    b.innerHTML = '<span class="sc">' + it.id + '</span><span class="dt">' + dt + '</span>';
+    if(it.name){
+      b.innerHTML = '<span class="sn"></span><span class="dt"><span class="sc"></span> · ' + dt + '</span>';
+      b.querySelector(".sn").textContent = it.name;
+      b.querySelector(".sc").textContent = it.id;
+    } else {
+      b.innerHTML = '<span class="sn sc"></span><span class="dt">' + dt + '</span>';
+      b.querySelector(".sn").textContent = it.id;
+    }
     b.addEventListener("click", function(){ openSession(it.id); });
     sessionListEl.appendChild(b);
   });
@@ -673,12 +741,13 @@ function openSession(id){
   stream.innerHTML = "";
   currentCodeEl.textContent = id;
   currentCodeEl.style.display = "inline-block";
+  updateHeading();
   mainEmpty.style.display = "none";
-  stream.style.display = "block";
+  stream.style.display = "flex";
   composer.style.display = "flex";
   // refresh active highlight
   Array.prototype.forEach.call(sessionListEl.children, function(el){
-    el.classList.toggle("active", el.querySelector(".sc") && el.querySelector(".sc").textContent === id);
+    el.classList.toggle("active", el.dataset && el.dataset.sessionId === id);
   });
   messagesRef = db.ref("sessions/" + id + "/messages").orderByKey();
   messagesHandler = messagesRef.on("child_added", function(snap){
@@ -690,24 +759,56 @@ function openSession(id){
 }
 
 document.getElementById("newSessionBtn").addEventListener("click", function(){
+  const name = (prompt("Session name (optional):", "") || "").trim();
   const id = generateSessionCode();
-  db.ref("sessions/" + id + "/meta/createdAt").set(firebase.database.ServerValue.TIMESTAMP)
+  const meta = { createdAt: firebase.database.ServerValue.TIMESTAMP };
+  if(name) meta.name = name;
+  sessionMeta[id] = { name: name, createdAt: Date.now() };
+  db.ref("sessions/" + id + "/meta").set(meta)
     .then(function(){ openSession(id); })
     .catch(function(err){ alert("Could not create session: " + (err && err.message)); });
+});
+
+// Click the heading to (re)name the active session.
+titleLabel.addEventListener("click", function(){
+  if(!activeSession) return;
+  const current = (sessionMeta[activeSession] && sessionMeta[activeSession].name) || "";
+  const name = prompt("Session name:", current);
+  if(name === null) return; // cancelled
+  const trimmed = name.trim();
+  db.ref("sessions/" + activeSession + "/meta/name").set(trimmed || null)
+    .then(function(){
+      sessionMeta[activeSession] = sessionMeta[activeSession] || {};
+      sessionMeta[activeSession].name = trimmed;
+      updateHeading();
+    })
+    .catch(function(err){ alert("Rename failed: " + (err && err.message)); });
+});
+
+// Small helper: flash a button's text label, then restore it.
+function flashButton(btn, msg){
+  const prev = btn.textContent;
+  btn.textContent = msg;
+  setTimeout(function(){ btn.textContent = prev; }, 1200);
+}
+
+document.getElementById("copyCodeBtn").addEventListener("click", function(){
+  if(!activeSession) return;
+  const btn = this;
+  const done = function(){ flashButton(btn, "Copied!"); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(activeSession).then(done).catch(function(){ fallbackCopy(activeSession, done); });
+  } else { fallbackCopy(activeSession, done); }
 });
 
 document.getElementById("copyLinkBtn").addEventListener("click", function(){
   if(!activeSession) return;
   const link = STUDENT_PAGE_URL + "?session=" + activeSession;
   const btn = this;
+  const done = function(){ flashButton(btn, "Copied!"); };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(link).then(flash).catch(function(){ fallbackCopy(link, flash); });
-  } else { fallbackCopy(link, flash); }
-  function flash(){
-    const prev = btn.textContent;
-    btn.textContent = "Copied!";
-    setTimeout(function(){ btn.textContent = prev; }, 1200);
-  }
+    navigator.clipboard.writeText(link).then(done).catch(function(){ fallbackCopy(link, done); });
+  } else { fallbackCopy(link, done); }
 });
 
 /* --- Post --- */
@@ -725,6 +826,33 @@ document.getElementById("postBtn").addEventListener("click", postMessage);
 composerInput.addEventListener("keydown", function(e){
   if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); postMessage(); }
 });
+
+/* ============================================================
+   Page-width slider (shared behaviour with student page)
+   The 0-100 value maps through a two-segment curve so the midpoint (50)
+   is exactly the 760px default, low end ~420px, high end ~2400px.
+   The choice is remembered in localStorage.
+   ============================================================ */
+const widthSlider = document.getElementById("widthSlider");
+const WIDTH_MIN = 420, WIDTH_DEFAULT = 760, WIDTH_MAX = 2400, WIDTH_KEY = "cb_content_width";
+function sliderValueToWidth(v){
+  v = Number(v);
+  if(v <= 50) return WIDTH_MIN + (v / 50) * (WIDTH_DEFAULT - WIDTH_MIN);
+  return WIDTH_DEFAULT + ((v - 50) / 50) * (WIDTH_MAX - WIDTH_DEFAULT);
+}
+function applyContentWidth(v){
+  document.documentElement.style.setProperty("--content-width", Math.round(sliderValueToWidth(v)) + "px");
+}
+(function initWidth(){
+  let stored = null;
+  try { stored = localStorage.getItem(WIDTH_KEY); } catch(e){}
+  if(stored !== null) widthSlider.value = stored;
+  applyContentWidth(widthSlider.value);
+  widthSlider.addEventListener("input", function(){
+    applyContentWidth(widthSlider.value);
+    try { localStorage.setItem(WIDTH_KEY, widthSlider.value); } catch(e){}
+  });
+})();
 </script>
 </body>
 </html>

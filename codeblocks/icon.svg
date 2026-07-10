@@ -1,0 +1,8 @@
+<svg viewBox="60 25 210 210" xmlns="http://www.w3.org/2000/svg">
+<g fill="none" stroke="#C2603E" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+<path d="M70,90 L200,90 L200,220 L70,220 Z"/>
+<path d="M70,90 L130,40 L260,40 L200,90"/>
+<path d="M260,40 L260,170 L200,220"/>
+</g>
+<text x="135" y="155" font-family="monospace" font-size="105" font-weight="bold" fill="#C2603E" text-anchor="middle" dominant-baseline="central">C</text>
+</svg>
