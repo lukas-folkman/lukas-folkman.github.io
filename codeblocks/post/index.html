@@ -326,10 +326,12 @@ button{font-family:inherit;cursor:pointer;}
     <span class="width-label">Wide</span>
   </div>
   <div class="actions" id="headerActions" style="display:none">
-    <button class="btn secondary" id="copyCodeBtn" type="button">Copy session code</button>
-    <button class="btn secondary" id="copyLinkBtn" type="button">Copy join link</button>
-    <button class="btn secondary" id="exportMdBtn" type="button">Export Markdown</button>
-    <button class="btn secondary" id="exportJsonBtn" type="button">Export JSON</button>
+    <span id="sessionActions" style="display:none">
+      <button class="btn secondary" id="copyCodeBtn" type="button">Copy session code</button>
+      <button class="btn secondary" id="copyLinkBtn" type="button">Copy join link</button>
+      <button class="btn secondary" id="exportMdBtn" type="button">Export Markdown</button>
+      <button class="btn secondary" id="exportJsonBtn" type="button">Export JSON</button>
+    </span>
     <button class="btn" id="newSessionBtn" type="button">Open new session</button>
     <button class="btn secondary" id="signOutBtn" type="button">Sign out</button>
   </div>
@@ -729,6 +731,7 @@ function generateSessionCode(len = 6){
 const loginView   = document.getElementById("loginView");
 const appView     = document.getElementById("app");
 const headerActions = document.getElementById("headerActions");
+const sessionActions = document.getElementById("sessionActions"); // shown only while a session is open
 const widthControl = document.getElementById("widthControl");
 const titleLabel  = document.getElementById("titleLabel");
 const sessionListEl = document.getElementById("sessionList");
@@ -846,6 +849,7 @@ function deleteSession(id){
             stream.innerHTML = "";
             stream.style.display = "none";
             composer.style.display = "none";
+            sessionActions.style.display = "none";
             mainEmpty.style.display = "flex";
             updateHeading();
           }
@@ -890,6 +894,7 @@ auth.onAuthStateChanged(function(user){
     loginView.style.display = "none";
     appView.classList.add("active");
     headerActions.style.display = "flex";
+    sessionActions.style.display = "none"; // no session open yet
     widthControl.style.display = "flex";
     loadSessions();
   } else {
@@ -994,6 +999,7 @@ function openSession(id){
   messageStore.clear();
   stream.innerHTML = "";
   updateHeading();
+  sessionActions.style.display = "contents"; // reveal copy/export buttons
   mainEmpty.style.display = "none";
   stream.style.display = "flex";
   composer.style.display = "flex";
