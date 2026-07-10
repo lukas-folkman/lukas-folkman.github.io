@@ -184,6 +184,13 @@ button{font-family:inherit;cursor:pointer;}
   border:1px solid var(--border);border-radius:8px;background:var(--bg-panel);color:var(--text);margin:0 0 16px;
 }
 .modal-card input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
+.modal-card textarea{
+  width:100%;min-height:150px;max-height:50vh;resize:vertical;margin:0 0 16px;
+  padding:10px 12px;font-size:14px;line-height:1.55;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  border:1px solid var(--border);border-radius:8px;background:var(--bg-panel);color:var(--text);
+}
+.modal-card textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
 .modal-actions{display:flex;justify-content:flex-end;gap:8px;}
 .btn.danger{background:var(--accent);}
 .btn.danger:hover{background:var(--accent-hover);}
@@ -281,6 +288,23 @@ button{font-family:inherit;cursor:pointer;}
 .msg-copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
 .msg-copy-btn svg{width:12px;height:12px;flex:none;}
 .msg-time{font-size:11px;color:var(--text-muted);order:1;}
+/* Teacher-only per-message edit + delete, styled like the copy button */
+.msg-edit-btn,.msg-del-btn{
+  opacity:0;visibility:hidden;transform:translateY(-2px);
+  transition:opacity .15s ease, transform .15s ease, background .15s ease;
+  background:var(--bg);border:1px solid var(--code-border);color:var(--code-text);
+  font-size:12px;padding:4px 9px;border-radius:6px;display:flex;align-items:center;gap:6px;
+  cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);
+}
+.msg-edit-btn{order:3;}
+.msg-del-btn{order:4;}
+.msg-wrap:hover .msg-edit-btn, .msg-edit-btn:focus-visible,
+.msg-wrap:hover .msg-del-btn, .msg-del-btn:focus-visible{
+  opacity:1;visibility:visible;transform:translateY(0);
+}
+.msg-edit-btn:hover{background:rgba(146,64,42,0.08);}
+.msg-del-btn:hover{background:rgba(194,96,62,0.12);color:var(--accent);border-color:rgba(194,96,62,0.4);}
+.msg-edit-btn svg,.msg-del-btn svg{width:12px;height:12px;flex:none;}
 </style>
 </head>
 <body>
@@ -347,6 +371,7 @@ button{font-family:inherit;cursor:pointer;}
     <h2 id="modalTitle"></h2>
     <p id="modalMsg" style="display:none"></p>
     <input id="modalInput" type="text" style="display:none">
+    <textarea id="modalTextarea" style="display:none"></textarea>
     <div class="modal-actions">
       <button class="btn secondary" id="modalCancel" type="button">Cancel</button>
       <button class="btn" id="modalOk" type="button">OK</button>
@@ -647,6 +672,22 @@ function appendMessage(container, id, rawText, ts){
   container.appendChild(wrap);
 }
 
+// Re-render an existing message in place after its text is edited.
+function updateMessage(container, id, rawText){
+  const wrap = container.querySelector('[data-msg-id="' + id + '"]');
+  if(!wrap) return;
+  messageStore.set(id, rawText);
+  const contentEl = wrap.querySelector(".msg-content");
+  if(contentEl) contentEl.innerHTML = renderMarkdown(rawText);
+}
+
+// Remove a message that was deleted.
+function removeMessage(container, id){
+  const wrap = container.querySelector('[data-msg-id="' + id + '"]');
+  if(wrap) wrap.remove();
+  messageStore.delete(id);
+}
+
 function wireCopyDelegation(container){
   container.addEventListener("click", function(e){
     const btn = e.target.closest(".copy-btn, .inline-copy-btn, .msg-copy-btn");
@@ -694,6 +735,8 @@ const APP_TITLE = "Post Codeblocks";
 let activeSession = null;      // current session id
 let messagesRef = null;        // current messages ref (to .off())
 let messagesHandler = null;    // current child_added handler
+let changedHandler = null;     // current child_changed handler
+let removedHandler = null;     // current child_removed handler
 const sessionMeta = {};        // id -> { name, createdAt } (kept in sync by loadSessions)
 
 wireCopyDelegation(stream);
@@ -708,6 +751,7 @@ const modalOverlay = document.getElementById("modalOverlay");
 const modalTitle = document.getElementById("modalTitle");
 const modalMsg = document.getElementById("modalMsg");
 const modalInput = document.getElementById("modalInput");
+const modalTextarea = document.getElementById("modalTextarea");
 const modalOk = document.getElementById("modalOk");
 const modalCancel = document.getElementById("modalCancel");
 let modalOnOk = null;
@@ -720,21 +764,30 @@ function openModal(opts){
   modalTitle.textContent = opts.title || "";
   if(opts.message){ modalMsg.textContent = opts.message; modalMsg.style.display = "block"; }
   else { modalMsg.style.display = "none"; }
-  if(opts.input){
+  // Single-line input, multi-line textarea, or neither.
+  if(opts.textarea){
+    modalTextarea.style.display = "block"; modalTextarea.value = opts.inputValue || "";
+    modalInput.style.display = "none";
+  } else if(opts.input){
     modalInput.style.display = "block";
     modalInput.value = opts.inputValue || "";
     modalInput.placeholder = opts.placeholder || "";
+    modalTextarea.style.display = "none";
   } else {
     modalInput.style.display = "none";
+    modalTextarea.style.display = "none";
   }
   modalOk.textContent = opts.okLabel || "OK";
   modalOk.classList.toggle("danger", !!opts.danger);
   modalOnOk = opts.onOk || null;
   modalOverlay.classList.add("open");
-  setTimeout(function(){ (opts.input ? modalInput : modalOk).focus(); }, 30);
+  setTimeout(function(){ (opts.textarea ? modalTextarea : (opts.input ? modalInput : modalOk)).focus(); }, 30);
 }
 function confirmModal(){
-  const val = modalInput.style.display === "none" ? "" : modalInput.value.trim();
+  // Textarea keeps exact formatting (no trim); single-line input is trimmed.
+  let val = "";
+  if(modalTextarea.style.display !== "none") val = modalTextarea.value;
+  else if(modalInput.style.display !== "none") val = modalInput.value.trim();
   const cb = modalOnOk;
   closeModal();
   if(cb) cb(val);
@@ -743,6 +796,8 @@ modalOk.addEventListener("click", confirmModal);
 modalCancel.addEventListener("click", closeModal);
 modalOverlay.addEventListener("click", function(e){ if(e.target === modalOverlay) closeModal(); });
 modalInput.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); confirmModal(); } });
+// In the textarea, Ctrl/Cmd+Enter confirms (plain Enter inserts a newline).
+modalTextarea.addEventListener("keydown", function(e){ if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); confirmModal(); } });
 document.addEventListener("keydown", function(e){ if(e.key === "Escape" && modalOverlay.classList.contains("open")) closeModal(); });
 
 // Rename any session by id (used by the heading and the sidebar pencil).
@@ -902,8 +957,29 @@ function renderSessionList(items){
 
 /* --- Open / switch session --- */
 function detachMessages(){
-  if(messagesRef && messagesHandler){ messagesRef.off("child_added", messagesHandler); }
-  messagesRef = null; messagesHandler = null;
+  if(messagesRef){
+    if(messagesHandler) messagesRef.off("child_added", messagesHandler);
+    if(changedHandler) messagesRef.off("child_changed", changedHandler);
+    if(removedHandler) messagesRef.off("child_removed", removedHandler);
+  }
+  messagesRef = null; messagesHandler = null; changedHandler = null; removedHandler = null;
+}
+
+// Append the teacher-only Edit + Delete controls to a message's footer.
+const PEN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+const BIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
+function addMsgControls(wrap){
+  if(!wrap) return;
+  const footer = wrap.querySelector(".msg-footer");
+  if(!footer || footer.querySelector(".msg-edit-btn")) return;
+  const edit = document.createElement("button");
+  edit.className = "msg-edit-btn"; edit.type = "button"; edit.setAttribute("aria-label", "Edit message");
+  edit.innerHTML = PEN_SVG + '<span>Edit</span>';
+  const del = document.createElement("button");
+  del.className = "msg-del-btn"; del.type = "button"; del.setAttribute("aria-label", "Delete message");
+  del.innerHTML = BIN_SVG + '<span>Delete</span>';
+  footer.appendChild(edit);
+  footer.appendChild(del);
 }
 
 function openSession(id){
@@ -925,10 +1001,52 @@ function openSession(id){
   messagesHandler = messagesRef.on("child_added", function(snap){
     const v = snap.val() || {};
     appendMessage(stream, snap.key, v.text != null ? v.text : "", v.ts);
+    addMsgControls(stream.lastElementChild);
     stream.scrollTop = stream.scrollHeight;
+  });
+  // Live-update / remove messages the teacher (or their other tab) edits/deletes.
+  changedHandler = messagesRef.on("child_changed", function(snap){
+    const v = snap.val() || {};
+    updateMessage(stream, snap.key, v.text != null ? v.text : "");
+  });
+  removedHandler = messagesRef.on("child_removed", function(snap){
+    removeMessage(stream, snap.key);
   });
   composerInput.focus();
 }
+
+// Edit / delete a single message (event-delegated on the stream).
+function editMessage(id){
+  if(!activeSession) return;
+  const raw = messageStore.get(id);
+  if(raw === undefined) return;
+  openModal({
+    title: "Edit message", textarea: true, inputValue: raw, okLabel: "Save",
+    onOk: function(text){
+      if(!text.trim()){ return; } // ignore an empty edit; use Delete to remove
+      db.ref("sessions/" + activeSession + "/messages/" + id).update({ text: text })
+        .catch(function(err){ alert("Edit failed: " + (err && err.message)); });
+    }
+  });
+}
+function deleteMessage(id){
+  if(!activeSession) return;
+  openModal({
+    title: "Delete message",
+    message: "Do you really want to delete this message?",
+    okLabel: "Delete", danger: true,
+    onOk: function(){
+      db.ref("sessions/" + activeSession + "/messages/" + id).remove()
+        .catch(function(err){ alert("Delete failed: " + (err && err.message)); });
+    }
+  });
+}
+stream.addEventListener("click", function(e){
+  const eBtn = e.target.closest(".msg-edit-btn");
+  const dBtn = e.target.closest(".msg-del-btn");
+  if(eBtn){ const w = eBtn.closest(".msg-wrap"); if(w) editMessage(w.dataset.msgId); }
+  else if(dBtn){ const w = dBtn.closest(".msg-wrap"); if(w) deleteMessage(w.dataset.msgId); }
+});
 
 document.getElementById("newSessionBtn").addEventListener("click", function(){
   openModal({

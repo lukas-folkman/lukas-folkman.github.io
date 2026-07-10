@@ -560,6 +560,22 @@ function appendMessage(container, id, rawText, ts){
   container.appendChild(wrap);
 }
 
+// Re-render an existing message in place after its text is edited.
+function updateMessage(container, id, rawText){
+  const wrap = container.querySelector('[data-msg-id="' + id + '"]');
+  if(!wrap) return;
+  messageStore.set(id, rawText);
+  const contentEl = wrap.querySelector(".msg-content");
+  if(contentEl) contentEl.innerHTML = renderMarkdown(rawText);
+}
+
+// Remove a message that was deleted.
+function removeMessage(container, id){
+  const wrap = container.querySelector('[data-msg-id="' + id + '"]');
+  if(wrap) wrap.remove();
+  messageStore.delete(id);
+}
+
 function wireCopyDelegation(container){
   container.addEventListener("click", function(e){
     const btn = e.target.closest(".copy-btn, .inline-copy-btn, .msg-copy-btn");
@@ -597,6 +613,8 @@ const APP_TITLE = "Codeblocks";
 let currentSession = null;
 let messagesRef = null;
 let messagesHandler = null;
+let changedHandler = null;     // child_changed (teacher edited a message)
+let removedHandler = null;     // child_removed (teacher deleted a message)
 let nameRef = null;            // live listener on this session's meta/name
 let nameHandler = null;
 let gotFirst = false;
@@ -608,7 +626,13 @@ wireCopyDelegation(stream);
 function isAtBottom(){
   return stream.scrollHeight - stream.scrollTop - stream.clientHeight < 60;
 }
-function scrollToBottom(){ stream.scrollTop = stream.scrollHeight; }
+// Scroll after the browser has laid out the newly-inserted message (double
+// rAF is robust across reflow timing).
+function scrollToBottom(){
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ stream.scrollTop = stream.scrollHeight; });
+  });
+}
 function setBarDefault(){
   unseen = 0;
   newmsgBox.classList.remove("alert");
@@ -690,12 +714,24 @@ function enterSession(code){
       setBarAlert();
     }
   });
+  // Reflect teacher edits/deletes live.
+  changedHandler = messagesRef.on("child_changed", function(snap){
+    const v = snap.val() || {};
+    updateMessage(stream, snap.key, v.text != null ? v.text : "");
+  });
+  removedHandler = messagesRef.on("child_removed", function(snap){
+    removeMessage(stream, snap.key);
+  });
 }
 
 function leave(){
-  if(messagesRef && messagesHandler){ messagesRef.off("child_added", messagesHandler); }
+  if(messagesRef){
+    if(messagesHandler) messagesRef.off("child_added", messagesHandler);
+    if(changedHandler) messagesRef.off("child_changed", changedHandler);
+    if(removedHandler) messagesRef.off("child_removed", removedHandler);
+  }
   if(nameRef && nameHandler){ nameRef.off("value", nameHandler); }
-  messagesRef = null; messagesHandler = null;
+  messagesRef = null; messagesHandler = null; changedHandler = null; removedHandler = null;
   nameRef = null; nameHandler = null;
   currentSession = null;
   messageStore.clear();
