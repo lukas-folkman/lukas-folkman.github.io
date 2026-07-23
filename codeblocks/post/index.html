@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-palette="orange">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,21 +7,30 @@
 <title>Post Codeblocks</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20viewBox%3D%2260%2025%20210%20210%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23C2603E%22%20stroke-width%3D%2211%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M70%2C90%20L200%2C90%20L200%2C220%20L70%2C220%20Z%22%2F%3E%3Cpath%20d%3D%22M70%2C90%20L130%2C40%20L260%2C40%20L200%2C90%22%2F%3E%3Cpath%20d%3D%22M260%2C40%20L260%2C170%20L200%2C220%22%2F%3E%3C%2Fg%3E%3Ctext%20x%3D%22135%22%20y%3D%22155%22%20font-family%3D%22monospace%22%20font-size%3D%22105%22%20font-weight%3D%22bold%22%20fill%3D%22%23C2603E%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22central%22%3EC%3C%2Ftext%3E%3C%2Fsvg%3E">
 <style>
-:root{
-  --bg: #FAF9F5;
-  --bg-panel: #F4F3EE;
-  --text: #1F1E1D;
-  --text-muted: #7A7468;
-  --border: #E5E2D9;
-  --accent: #C2603E;
-  --accent-hover: #A94E30;
-  --code-bg: #F7F4EE;
-  --code-text: #92402A;
-  --code-border: rgba(146,64,42,0.28);
-  --inline-code-bg: #EFEDE5;
-  --inline-code-text: #92402A;
-  --link: #B0512F;
-  --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03);
+/* ===== Colour palettes — the ENTIRE colour scheme lives here. =====
+   Swap the whole theme by setting  <html data-palette="orange|blue|green">.
+   To add a palette, copy a block and change the values. Non-colour tokens
+   (shadow) stay palette-independent in :root. Fixed status colours (shared
+   green / hidden red) and the code syntax theme are defined separately and
+   deliberately do NOT change with the palette. */
+:root{ --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 1px 8px rgba(0,0,0,0.03); }
+html[data-palette="orange"]{
+  --bg:#FAF9F5; --bg-panel:#F4F3EE; --text:#1F1E1D; --text-muted:#7A7468;
+  --border:#E5E2D9; --accent:#C2603E; --accent-hover:#A94E30;
+  --code-bg:#F7F4EE; --code-text:#92402A; --code-border:rgba(146,64,42,0.28);
+  --inline-code-bg:#EFEDE5; --inline-code-text:#92402A; --link:#B0512F;
+}
+html[data-palette="blue"]{
+  --bg:#E1F1FB; --bg-panel:#CBE6F8; --text:#152430; --text-muted:#4C6375;
+  --border:#ACD5F0; --accent:#2C82C4; --accent-hover:#2170AC;
+  --code-bg:#D8ECFA; --code-text:#1C6BAE; --code-border:rgba(44,130,196,0.32);
+  --inline-code-bg:#C6E2F6; --inline-code-text:#1C6BAE; --link:#2C82C4;
+}
+html[data-palette="green"]{
+  --bg:#E4F2E8; --bg-panel:#D2E8D7; --text:#15211A; --text-muted:#4C6450;
+  --border:#BBD9C1; --accent:#3F8F5B; --accent-hover:#337A4B;
+  --code-bg:#DBEEDF; --code-text:#2E6B45; --code-border:rgba(63,143,91,0.32);
+  --inline-code-bg:#CCE6D2; --inline-code-text:#2E6B45; --link:#3F8F5B;
 }
 *{box-sizing:border-box;}
 html{margin:0;height:100%;}
@@ -59,6 +68,8 @@ header{
   padding:3px 10px;border-radius:6px;color:var(--code-text);
 }
 .actions{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end;}
+/* Keeps the palette swatches tight against the actions (no space-between gap). */
+.header-right{display:flex;align-items:center;gap:12px;flex:none;}
 
 /* Page-width slider */
 .width-control{display:flex;align-items:center;gap:8px;flex:1;max-width:280px;justify-content:center;}
@@ -76,6 +87,28 @@ header{
   border:2px solid var(--bg);box-shadow:0 0 0 1px var(--code-border);
 }
 @media (max-width:820px){ .width-control{display:none !important;} }
+
+/* Palette picker swatches (between brand and slider) */
+.palette-picker{display:flex;align-items:center;gap:7px;flex:none;}
+.swatch{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;box-shadow:0 0 0 1px var(--border);transition:transform .1s ease;}
+.swatch:hover{transform:scale(1.12);}
+.swatch.orange{background:#C2603E;}
+.swatch.blue{background:#2C82C4;}
+.swatch.green{background:#3F8F5B;}
+.swatch.active{border-color:var(--text);}
+
+/* Syntax highlighting theme (fixed — deliberately does NOT change with the palette) */
+.hljs-comment,.hljs-quote{color:#6e7781;font-style:italic;}
+.hljs-keyword,.hljs-selector-tag,.hljs-literal,.hljs-type,.hljs-name{color:#cf222e;}
+.hljs-string,.hljs-attr,.hljs-symbol,.hljs-bullet,.hljs-addition,.hljs-meta .hljs-string{color:#0a7d33;}
+.hljs-number,.hljs-selector-attr,.hljs-selector-pseudo{color:#0550ae;}
+.hljs-built_in,.hljs-title.class_,.hljs-class .hljs-title,.hljs-attribute,.hljs-variable,.hljs-template-variable{color:#953800;}
+.hljs-title,.hljs-title.function_,.hljs-function .hljs-title,.hljs-section{color:#6639ba;}
+.hljs-tag{color:#116329;}
+.hljs-meta{color:#6e7781;}
+.hljs-deletion{color:#cf222e;}
+.hljs-emphasis{font-style:italic;}
+.hljs-strong{font-weight:600;}
 
 /* Buttons */
 button{font-family:inherit;cursor:pointer;}
@@ -112,34 +145,43 @@ button{font-family:inherit;cursor:pointer;}
 #app{flex:1;display:none;min-height:0;}
 #app.active{display:flex;}
 .sidebar{
-  width:230px;flex:none;border-right:1px solid var(--border);
+  width:var(--sidebar-w,230px);flex:none;
   background:var(--bg-panel);display:flex;flex-direction:column;min-height:0;
 }
+/* Draggable divider to resize the sidebar. */
+.sidebar-resizer{
+  flex:none;width:6px;cursor:col-resize;background:var(--border);
+  transition:background .12s ease;
+}
+.sidebar-resizer:hover, .sidebar-resizer.dragging{background:var(--accent);}
 .sidebar-head{padding:14px 16px 8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);}
 .session-list{flex:1;overflow-y:auto;padding:0 8px 12px;}
+/* Row is a positioning context; the tools overlay the text on hover. */
 .session-item{
-  display:flex;align-items:center;gap:4px;width:100%;
-  padding:6px 6px 6px 10px;border-radius:8px;margin-bottom:2px;border:1px solid transparent;
+  position:relative;width:100%;
+  padding:6px 10px;border-radius:8px;margin-bottom:2px;border:1px solid transparent;
 }
 .session-item:hover{background:var(--bg);}
 .session-item.active{background:var(--bg);border:1px solid var(--border);}
 .session-main{
-  flex:1;min-width:0;text-align:left;background:none;border:none;
-  font-family:inherit;font-size:13px;color:var(--text);cursor:pointer;padding:3px 0;
+  display:block;width:100%;text-align:left;background:none;border:none;
+  font-family:inherit;color:var(--text);cursor:pointer;padding:2px 0;
 }
-.session-main .sn{display:flex;align-items:center;gap:6px;font-weight:600;min-width:0;}
-.session-main .sn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
-.session-main .sc{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;letter-spacing:1px;}
-.session-main .scinline{
-  flex:none;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  font-weight:700;font-size:10.5px;letter-spacing:1px;color:var(--code-text);
-  background:var(--bg);border:1px solid var(--border);padding:1px 6px;border-radius:5px;
+/* Row 1: session name. Row 2: code + last-message time. Both ellipsised so
+   they never overflow — widen the sidebar to reveal the full name. */
+.session-main .sn{display:block;font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.session-main .dt{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.session-main .sc{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-weight:700;letter-spacing:.5px;color:var(--code-text);}
+/* Edit/delete overlay the row's right edge on hover (no reserved column). */
+.session-tools{
+  position:absolute;top:0;right:0;height:100%;
+  display:flex;align-items:center;gap:2px;padding-left:26px;padding-right:6px;
+  opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:2;
+  background:linear-gradient(to right, transparent, var(--bg) 45%);
 }
-.session-main .dt{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;}
-.session-tools{display:flex;gap:2px;flex:none;opacity:0;transition:opacity .12s ease;}
-.session-item:hover .session-tools, .session-item.active .session-tools{opacity:1;}
+.session-item:hover .session-tools{opacity:1;pointer-events:auto;}
 .tool-btn{
-  display:flex;align-items:center;justify-content:center;width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;width:26px;height:26px;flex:none;
   background:none;border:none;border-radius:6px;color:var(--text-muted);cursor:pointer;
 }
 .tool-btn:hover{background:var(--bg-panel);color:var(--text);}
@@ -276,9 +318,11 @@ button{font-family:inherit;cursor:pointer;}
 .msg-wrap{
   width:100%;max-width:min(var(--content-width,760px),100%);
   padding:12px 16px;border-radius:10px;
+  background:#ffffff;border:1px solid var(--border);
 }
-.msg-wrap:nth-child(odd){background:#ffffff;}
-.msg-wrap:nth-child(even){background:var(--bg-panel);}
+/* Border encodes share state (teacher only): green = shared, red = hidden. */
+.msg-wrap.shared{border-color:#3F7A39;}
+.msg-wrap.hidden{border-color:#C0392B;}
 .msg-footer{display:flex;align-items:center;gap:10px;margin-top:4px;min-height:24px;}
 .msg-copy-btn{
   opacity:0;visibility:hidden;transform:translateY(-2px);
@@ -302,15 +346,25 @@ button{font-family:inherit;cursor:pointer;}
   font-size:12px;padding:4px 9px;border-radius:6px;display:flex;align-items:center;gap:6px;
   cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);
 }
+.msg-share-btn{
+  opacity:0;visibility:hidden;transform:translateY(-2px);
+  transition:opacity .15s ease, transform .15s ease, background .15s ease;
+  background:var(--bg);border:1px solid var(--code-border);color:var(--code-text);
+  font-size:12px;padding:4px 9px;border-radius:6px;display:flex;align-items:center;gap:6px;
+  cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);
+}
 .msg-edit-btn{order:3;}
 .msg-del-btn{order:4;}
+.msg-share-btn{order:5;}
 .msg-wrap:hover .msg-edit-btn, .msg-edit-btn:focus-visible,
-.msg-wrap:hover .msg-del-btn, .msg-del-btn:focus-visible{
+.msg-wrap:hover .msg-del-btn, .msg-del-btn:focus-visible,
+.msg-wrap:hover .msg-share-btn, .msg-share-btn:focus-visible{
   opacity:1;visibility:visible;transform:translateY(0);
 }
 .msg-edit-btn:hover{background:rgba(146,64,42,0.08);}
 .msg-del-btn:hover{background:rgba(194,96,62,0.12);color:var(--accent);border-color:rgba(194,96,62,0.4);}
-.msg-edit-btn svg,.msg-del-btn svg{width:12px;height:12px;flex:none;}
+.msg-share-btn:hover{background:rgba(146,64,42,0.08);}
+.msg-edit-btn svg,.msg-del-btn svg,.msg-share-btn svg{width:12px;height:12px;flex:none;}
 </style>
 </head>
 <body>
@@ -325,6 +379,7 @@ button{font-family:inherit;cursor:pointer;}
     <input type="range" id="widthSlider" min="0" max="100" step="1" value="50" aria-label="Message width">
     <span class="width-label">Wide</span>
   </div>
+  <div class="header-right">
   <div class="actions" id="headerActions" style="display:none">
     <span id="sessionActions" style="display:none">
       <button class="btn secondary" id="copyCodeBtn" type="button">Copy session code</button>
@@ -332,8 +387,16 @@ button{font-family:inherit;cursor:pointer;}
       <button class="btn secondary" id="exportMdBtn" type="button">Export Markdown</button>
       <button class="btn secondary" id="exportJsonBtn" type="button">Export JSON</button>
     </span>
+    <button class="btn secondary" id="importJsonBtn" type="button">Import JSON</button>
     <button class="btn" id="newSessionBtn" type="button">Open new session</button>
     <button class="btn secondary" id="signOutBtn" type="button">Sign out</button>
+    <input type="file" id="importInput" accept="application/json,.json" style="display:none">
+  </div>
+  <div class="palette-picker" role="group" aria-label="Colour theme">
+    <button class="swatch orange" type="button" data-palette="orange" title="Orange theme" aria-label="Orange theme"></button>
+    <button class="swatch blue" type="button" data-palette="blue" title="Blue theme" aria-label="Blue theme"></button>
+    <button class="swatch green" type="button" data-palette="green" title="Green theme" aria-label="Green theme"></button>
+  </div>
   </div>
 </header>
 
@@ -359,6 +422,7 @@ button{font-family:inherit;cursor:pointer;}
     <div class="sidebar-head">Sessions</div>
     <div class="session-list" id="sessionList"></div>
   </aside>
+  <div class="sidebar-resizer" id="sidebarResizer" title="Drag to resize"></div>
   <div class="main">
     <div class="main-empty" id="mainEmpty">Open a new session, or pick one from the left to resume posting.</div>
     <div class="stream" id="stream" style="display:none"></div>
@@ -392,6 +456,8 @@ button{font-family:inherit;cursor:pointer;}
 <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-database-compat.js"></script>
+<!-- Syntax highlighting (pinned version; add an SRI integrity hash from cdnjs for extra hardening) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
 <script>
 /* ============================================================
@@ -662,6 +728,14 @@ function fmtTime(ts){
   return pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
 }
 
+// Run highlight.js over any fenced code blocks (that declared a language)
+// inside a message wrap. No-op if the CDN script hasn't loaded.
+function highlightWrap(el){
+  if(!window.hljs || !el) return;
+  const nodes = el.querySelectorAll('.code-block code[class*="language-"]');
+  for(let i = 0; i < nodes.length; i++){ try { window.hljs.highlightElement(nodes[i]); } catch(e){} }
+}
+
 function appendMessage(container, id, rawText, ts){
   messageStore.set(id, rawText);
   const wrap = document.createElement("div");
@@ -679,6 +753,8 @@ function appendMessage(container, id, rawText, ts){
       '<time class="msg-time">' + fmtTime(ts) + '</time>' +
     '</div>';
   container.appendChild(wrap);
+  highlightWrap(wrap);
+  return wrap;
 }
 
 // Re-render an existing message in place after its text is edited.
@@ -687,7 +763,7 @@ function updateMessage(container, id, rawText){
   if(!wrap) return;
   messageStore.set(id, rawText);
   const contentEl = wrap.querySelector(".msg-content");
-  if(contentEl) contentEl.innerHTML = renderMarkdown(rawText);
+  if(contentEl){ contentEl.innerHTML = renderMarkdown(rawText); highlightWrap(wrap); }
 }
 
 // Remove a message that was deleted.
@@ -859,6 +935,81 @@ function deleteSession(id){
   });
 }
 
+/* ============================================================
+   Create a brand-new session from a list of messages (used by Duplicate and
+   Import JSON). Gets a NEW code, keeps each message's original ts + shared,
+   and its fresh createdAt puts it at the top of the sidebar.
+   `messages` = [{ text, ts, shared }] in chronological order.
+   ============================================================ */
+function createSessionFromData(name, messages){
+  const id = generateSessionCode();
+  const baseRef = db.ref("sessions/" + id + "/messages");
+  const msgObj = {};
+  (messages || []).forEach(function(m){
+    if(!m) return;
+    const key = baseRef.push().key; // sequential push keys preserve order
+    const rec = { text: (m.text != null ? m.text : ""), shared: (m.shared !== false) };
+    rec.ts = (typeof m.ts === "number" && m.ts > 0) ? m.ts : firebase.database.ServerValue.TIMESTAMP;
+    msgObj[key] = rec;
+  });
+  const meta = { createdAt: firebase.database.ServerValue.TIMESTAMP };
+  if(name) meta.name = name;
+  const payload = { meta: meta };
+  if(Object.keys(msgObj).length) payload.messages = msgObj;
+  sessionMeta[id] = { name: name || "", createdAt: Date.now() };
+  // Write meta + messages as one atomic child update (see Section 5.1 — a write
+  // at the {id} level itself would be denied).
+  return db.ref("sessions/" + id).update(payload).then(function(){ openSession(id); return id; });
+}
+
+// Duplicate an existing session (with all its messages) under a new code/name.
+function duplicateSession(srcId){
+  db.ref("sessions/" + srcId).once("value").then(function(snap){
+    const val = snap.val() || {};
+    const meta = val.meta || {};
+    const msgsObj = val.messages || {};
+    const messages = Object.keys(msgsObj).sort().map(function(k){
+      const m = msgsObj[k] || {};
+      return { text: m.text, ts: m.ts, shared: m.shared };
+    });
+    openModal({
+      title: "Duplicate session",
+      input: true, inputValue: meta.name || "", placeholder: "Session name",
+      okLabel: "Duplicate",
+      onOk: function(name){
+        createSessionFromData(name, messages).catch(function(err){ alert("Duplicate failed: " + (err && err.message)); });
+      }
+    });
+  }).catch(function(err){ alert("Could not read session: " + (err && err.message)); });
+}
+
+// Import a previously-exported JSON session file as a new session.
+const importInput = document.getElementById("importInput");
+document.getElementById("importJsonBtn").addEventListener("click", function(){ importInput.value = ""; importInput.click(); });
+importInput.addEventListener("change", function(e){
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    let data;
+    try { data = JSON.parse(ev.target.result); }
+    catch(err){ alert("That file isn't valid JSON."); return; }
+    if(!data || !Array.isArray(data.messages)){
+      alert("This doesn't look like an exported Codeblocks session (no \"messages\" array).");
+      return;
+    }
+    openModal({
+      title: "Import session",
+      input: true, inputValue: (data.name || ""), placeholder: "Session name",
+      okLabel: "Import",
+      onOk: function(name){
+        createSessionFromData(name, data.messages).catch(function(err){ alert("Import failed: " + (err && err.message)); });
+      }
+    });
+  };
+  reader.readAsText(file);
+});
+
 // Show the active session's name (falling back to its code) in the heading.
 function updateHeading(){
   if(activeSession){
@@ -915,8 +1066,11 @@ function loadSessions(){
     const val = snap.val() || {};
     const items = Object.keys(val).map(function(id){
       const meta = (val[id] && val[id].meta) || {};
+      const msgs = (val[id] && val[id].messages) || null;
+      let lastTs = 0;
+      if(msgs){ for(const k in msgs){ const t = msgs[k] && msgs[k].ts; if(t && t > lastTs) lastTs = t; } }
       sessionMeta[id] = { name: meta.name || "", createdAt: meta.createdAt || 0 };
-      return { id: id, name: meta.name || "", createdAt: meta.createdAt || 0 };
+      return { id: id, name: meta.name || "", createdAt: meta.createdAt || 0, lastTs: lastTs };
     });
     items.sort(function(a, b){ return b.createdAt - a.createdAt; });
     renderSessionList(items);
@@ -926,6 +1080,7 @@ function loadSessions(){
 
 const PENCIL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
 const TRASH_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
+const COPY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
 
 function renderSessionList(items){
   if(!items.length){
@@ -937,29 +1092,34 @@ function renderSessionList(items){
     const row = document.createElement("div");
     row.className = "session-item" + (it.id === activeSession ? " active" : "");
     row.dataset.sessionId = it.id;
-    const dt = it.createdAt ? new Date(it.createdAt).toLocaleString() : "";
+    const when = it.lastTs ? new Date(it.lastTs).toLocaleString() : "No messages yet";
     const main = document.createElement("button");
     main.className = "session-main";
     main.type = "button";
+    // Row 1: session name (or the code, if unnamed).
+    // Row 2: session code + the datetime of the most recent message.
+    main.innerHTML = '<span class="sn"></span><span class="dt"></span>';
+    const dtEl = main.querySelector(".dt");
     if(it.name){
-      // Name with the session code shown as a small chip right next to it.
-      main.innerHTML = '<span class="sn"><span class="nm"></span><span class="scinline"></span></span><span class="dt"></span>';
-      main.querySelector(".nm").textContent = it.name;
-      main.querySelector(".scinline").textContent = it.id;
+      main.querySelector(".sn").textContent = it.name;
+      const sc = document.createElement("span"); sc.className = "sc"; sc.textContent = it.id;
+      dtEl.appendChild(sc);
+      dtEl.appendChild(document.createTextNode(" · " + when));
     } else {
-      main.innerHTML = '<span class="sn"><span class="nm sc"></span></span><span class="dt"></span>';
-      main.querySelector(".nm").textContent = it.id;
+      const sn = main.querySelector(".sn"); sn.classList.add("sc"); sn.textContent = it.id;
+      dtEl.textContent = when;
     }
-    main.querySelector(".dt").textContent = dt;
     main.addEventListener("click", function(){ openSession(it.id); });
     const tools = document.createElement("div");
     tools.className = "session-tools";
     tools.innerHTML =
       '<button class="tool-btn" type="button" title="Rename" aria-label="Rename session">' + PENCIL_SVG + '</button>' +
+      '<button class="tool-btn" type="button" title="Duplicate" aria-label="Duplicate session">' + COPY_SVG + '</button>' +
       '<button class="tool-btn danger" type="button" title="Delete" aria-label="Delete session">' + TRASH_SVG + '</button>';
     const btns = tools.querySelectorAll(".tool-btn");
     btns[0].addEventListener("click", function(){ renameSession(it.id); });
-    btns[1].addEventListener("click", function(){ deleteSession(it.id); });
+    btns[1].addEventListener("click", function(){ duplicateSession(it.id); });
+    btns[2].addEventListener("click", function(){ deleteSession(it.id); });
     row.appendChild(main);
     row.appendChild(tools);
     sessionListEl.appendChild(row);
@@ -976,9 +1136,11 @@ function detachMessages(){
   messagesRef = null; messagesHandler = null; changedHandler = null; removedHandler = null;
 }
 
-// Append the teacher-only Edit + Delete controls to a message's footer.
+// Teacher-only per-message controls (Edit / Delete / Share-Unshare) + icons.
 const PEN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
 const BIN_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>';
+const EYE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+const EYE_OFF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
 function addMsgControls(wrap){
   if(!wrap) return;
   const footer = wrap.querySelector(".msg-footer");
@@ -989,8 +1151,25 @@ function addMsgControls(wrap){
   const del = document.createElement("button");
   del.className = "msg-del-btn"; del.type = "button"; del.setAttribute("aria-label", "Delete message");
   del.innerHTML = BIN_SVG + '<span>Delete</span>';
+  const share = document.createElement("button");
+  share.className = "msg-share-btn"; share.type = "button";
   footer.appendChild(edit);
   footer.appendChild(del);
+  footer.appendChild(share);
+}
+
+// Paint a message's share state: card border colour + the Share/Unshare button.
+function applyShared(wrap, shared){
+  if(!wrap) return;
+  const isShared = shared !== false; // missing / true => shared
+  wrap.classList.toggle("shared", isShared);
+  wrap.classList.toggle("hidden", !isShared);
+  const btn = wrap.querySelector(".msg-share-btn");
+  if(btn){
+    btn.innerHTML = (isShared ? EYE_OFF_SVG : EYE_SVG) +
+      '<span>' + (isShared ? "Unshare" : "Share") + '</span>';
+    btn.setAttribute("aria-label", isShared ? "Unshare message (hide from students)" : "Share message (show to students)");
+  }
 }
 
 function openSession(id){
@@ -1010,14 +1189,17 @@ function openSession(id){
   messagesRef = db.ref("sessions/" + id + "/messages").orderByKey();
   messagesHandler = messagesRef.on("child_added", function(snap){
     const v = snap.val() || {};
-    appendMessage(stream, snap.key, v.text != null ? v.text : "", v.ts);
-    addMsgControls(stream.lastElementChild);
+    const wrap = appendMessage(stream, snap.key, v.text != null ? v.text : "", v.ts);
+    addMsgControls(wrap);
+    applyShared(wrap, v.shared);
     stream.scrollTop = stream.scrollHeight;
   });
-  // Live-update / remove messages the teacher (or their other tab) edits/deletes.
+  // Live-update / remove messages the teacher (or their other tab) edits, shares, deletes.
   changedHandler = messagesRef.on("child_changed", function(snap){
     const v = snap.val() || {};
     updateMessage(stream, snap.key, v.text != null ? v.text : "");
+    const wrap = stream.querySelector('[data-msg-id="' + snap.key + '"]');
+    applyShared(wrap, v.shared);
   });
   removedHandler = messagesRef.on("child_removed", function(snap){
     removeMessage(stream, snap.key);
@@ -1051,11 +1233,22 @@ function deleteMessage(id){
     }
   });
 }
+// Toggle a message's visibility to students. No confirmation — it's reversible.
+function toggleShare(id){
+  if(!activeSession) return;
+  const wrap = stream.querySelector('[data-msg-id="' + id + '"]');
+  if(!wrap) return;
+  const currentlyShared = !wrap.classList.contains("hidden");
+  db.ref("sessions/" + activeSession + "/messages/" + id + "/shared").set(!currentlyShared)
+    .catch(function(err){ alert("Could not change sharing: " + (err && err.message)); });
+}
 stream.addEventListener("click", function(e){
   const eBtn = e.target.closest(".msg-edit-btn");
   const dBtn = e.target.closest(".msg-del-btn");
+  const sBtn = e.target.closest(".msg-share-btn");
   if(eBtn){ const w = eBtn.closest(".msg-wrap"); if(w) editMessage(w.dataset.msgId); }
   else if(dBtn){ const w = dBtn.closest(".msg-wrap"); if(w) deleteMessage(w.dataset.msgId); }
+  else if(sBtn){ const w = sBtn.closest(".msg-wrap"); if(w) toggleShare(w.dataset.msgId); }
 });
 
 document.getElementById("newSessionBtn").addEventListener("click", function(){
@@ -1137,7 +1330,8 @@ function buildMarkdown(code, name, createdAt, msgs){
   // Setext heading.
   const blocks = msgs.map(function(m){
     const t = m.ts ? new Date(m.ts).toLocaleString() : "";
-    return "**" + t + "**\n\n" + m.text;
+    const tag = (m.shared === false) ? " _(hidden from students)_" : "";
+    return "**" + t + "**" + tag + "\n\n" + m.text;
   });
   out += "---\n\n" + blocks.join("\n\n---\n\n") + "\n\n---\n";
   return out;
@@ -1152,7 +1346,7 @@ function exportSession(format){
     const msgsObj = val.messages || {};
     const msgs = Object.keys(msgsObj).sort().map(function(k){
       const m = msgsObj[k] || {};
-      return { id: k, ts: m.ts || 0, text: m.text != null ? m.text : "" };
+      return { id: k, ts: m.ts || 0, text: m.text != null ? m.text : "", shared: m.shared !== false };
     });
     const name = meta.name || "";
     if(format === "json"){
@@ -1174,7 +1368,8 @@ function postMessage(){
   if(!text.trim()) return;
   db.ref("sessions/" + activeSession + "/messages").push({
     text: text,
-    ts: firebase.database.ServerValue.TIMESTAMP
+    ts: firebase.database.ServerValue.TIMESTAMP,
+    shared: true
   }).then(function(){ composerInput.value = ""; composerInput.focus(); })
     .catch(function(err){ alert("Post failed: " + (err && err.message)); });
 }
@@ -1208,6 +1403,72 @@ function applyContentWidth(v){
     applyContentWidth(widthSlider.value);
     try { localStorage.setItem(WIDTH_KEY, widthSlider.value); } catch(e){}
   });
+})();
+
+/* ============================================================
+   Draggable sidebar width (remembered in localStorage).
+   ============================================================ */
+const SIDEBAR_MIN = 180, SIDEBAR_MAX = 640, SIDEBAR_KEY = "cb_sidebar_w";
+const sidebarResizer = document.getElementById("sidebarResizer");
+(function initSidebar(){
+  let stored = null;
+  try { stored = localStorage.getItem(SIDEBAR_KEY); } catch(e){}
+  if(stored !== null){
+    const w = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, parseInt(stored, 10) || 230));
+    document.documentElement.style.setProperty("--sidebar-w", w + "px");
+  }
+  let dragging = false;
+  function onMove(e){
+    if(!dragging) return;
+    const left = appView.getBoundingClientRect().left;
+    let w = Math.round(e.clientX - left);
+    w = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, w));
+    document.documentElement.style.setProperty("--sidebar-w", w + "px");
+  }
+  function onUp(){
+    if(!dragging) return;
+    dragging = false;
+    sidebarResizer.classList.remove("dragging");
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+    const w = getComputedStyle(document.documentElement).getPropertyValue("--sidebar-w").trim();
+    try { localStorage.setItem(SIDEBAR_KEY, parseInt(w, 10)); } catch(e){}
+    document.removeEventListener("mousemove", onMove);
+    document.removeEventListener("mouseup", onUp);
+  }
+  sidebarResizer.addEventListener("mousedown", function(e){
+    e.preventDefault();
+    dragging = true;
+    sidebarResizer.classList.add("dragging");
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  });
+})();
+
+/* ============================================================
+   Colour palette picker (orange / blue / green) — remembered in localStorage.
+   ============================================================ */
+(function initPalette(){
+  const PALETTES = ["orange","blue","green"], PALETTE_KEY = "cb_palette";
+  function apply(p){
+    if(PALETTES.indexOf(p) < 0) p = "orange";
+    document.documentElement.setAttribute("data-palette", p);
+    const sw = document.querySelectorAll(".swatch");
+    for(let i = 0; i < sw.length; i++) sw[i].classList.toggle("active", sw[i].getAttribute("data-palette") === p);
+  }
+  let stored = null;
+  try { stored = localStorage.getItem(PALETTE_KEY); } catch(e){}
+  apply(stored || "orange");
+  const sw = document.querySelectorAll(".swatch");
+  for(let i = 0; i < sw.length; i++){
+    sw[i].addEventListener("click", function(){
+      const p = this.getAttribute("data-palette");
+      apply(p);
+      try { localStorage.setItem(PALETTE_KEY, p); } catch(e){}
+    });
+  }
 })();
 </script>
 </body>
