@@ -262,6 +262,9 @@ button{font-family:inherit;cursor:pointer;}
 .msg-copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
 .msg-copy-btn svg{width:12px;height:12px;flex:none;}
 .msg-time{font-size:11px;color:var(--text-muted);order:1;}
+/* Teacher's "Allow copy" unticked (default) => hide the whole-message Copy
+   button. Code-block and inline-code copy buttons are unaffected. */
+.stream.no-msg-copy .msg-copy-btn{display:none !important;}
 </style>
 </head>
 <body>
@@ -670,6 +673,8 @@ let changedHandler = null;     // child_changed (teacher edited a message)
 let removedHandler = null;     // child_removed (teacher deleted a message)
 let nameRef = null;            // live listener on this session's meta/name
 let nameHandler = null;
+let allowCopyRef = null;       // live listener on this session's meta/allowCopy
+let allowCopyHandler = null;
 let gotFirst = false;
 let unseen = 0;                // messages that arrived while scrolled up
 let order = [];                // every message id in chronological order (incl. hidden)
@@ -773,6 +778,14 @@ function enterSession(code){
     titleLabel.textContent = (name && String(name).trim()) ? name : code;
   });
 
+  // Whole-message Copy button is hidden unless the teacher ticked "Allow copy"
+  // (missing = false). Toggles live for everyone in the session.
+  stream.classList.add("no-msg-copy");
+  allowCopyRef = db.ref("sessions/" + code + "/meta/allowCopy");
+  allowCopyHandler = allowCopyRef.on("value", function(snap){
+    stream.classList.toggle("no-msg-copy", snap.val() !== true);
+  });
+
   messagesRef = db.ref("sessions/" + code + "/messages").orderByKey();
   messagesHandler = messagesRef.on("child_added", function(snap){
     const id = snap.key;
@@ -827,6 +840,9 @@ function leave(){
   if(nameRef && nameHandler){ nameRef.off("value", nameHandler); }
   messagesRef = null; messagesHandler = null; changedHandler = null; removedHandler = null;
   nameRef = null; nameHandler = null;
+  if(allowCopyRef && allowCopyHandler){ allowCopyRef.off("value", allowCopyHandler); }
+  allowCopyRef = null; allowCopyHandler = null;
+  stream.classList.add("no-msg-copy");
   currentSession = null;
   messageStore.clear();
   order = [];
