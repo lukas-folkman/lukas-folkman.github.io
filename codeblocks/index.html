@@ -589,8 +589,20 @@ function fmtTime(ts){
 
 // Run highlight.js over any fenced code blocks (that declared a language)
 // inside a message wrap. No-op if the CDN script hasn't loaded.
+// Session default language for fenced blocks that don't name one (hljs name;
+// "" = none). Applied at render time only — stored Markdown is never changed.
+const DEFAULT_LANGS = ["java", "python", "javascript", "sql"];
+let defaultLang = "";
+function normalizeLang(v){ return DEFAULT_LANGS.indexOf(v) >= 0 ? v : ""; }
+
 function highlightWrap(el){
   if(!window.hljs || !el) return;
+  // Tag bare ``` blocks with the session default so highlight.js treats them
+  // exactly like ```java (etc.). Explicit languages already have a class.
+  if(defaultLang && window.hljs.getLanguage && window.hljs.getLanguage(defaultLang)){
+    const bare = el.querySelectorAll('.code-block code:not([class*="language-"])');
+    for(let i = 0; i < bare.length; i++) bare[i].classList.add("language-" + defaultLang);
+  }
   const nodes = el.querySelectorAll('.code-block code[class*="language-"]');
   for(let i = 0; i < nodes.length; i++){ try { window.hljs.highlightElement(nodes[i]); } catch(e){} }
 }
@@ -630,6 +642,17 @@ function removeMessage(container, id){
   const wrap = container.querySelector('[data-msg-id="' + id + '"]');
   if(wrap) wrap.remove();
   messageStore.delete(id);
+}
+
+// Re-render every message currently in the DOM from its raw text (used when
+// the default language changes — highlighting can't be undone in place).
+function rerenderAll(container){
+  const wraps = container.querySelectorAll(".msg-wrap");
+  for(let i = 0; i < wraps.length; i++){
+    const id = wraps[i].dataset.msgId;
+    const raw = messageStore.get(id);
+    if(raw !== undefined) updateMessage(container, id, raw);
+  }
 }
 
 function wireCopyDelegation(container){
@@ -675,6 +698,8 @@ let nameRef = null;            // live listener on this session's meta/name
 let nameHandler = null;
 let allowCopyRef = null;       // live listener on this session's meta/allowCopy
 let allowCopyHandler = null;
+let langRef = null;            // live listener on this session's meta/defaultLang
+let langHandler = null;
 let gotFirst = false;
 let unseen = 0;                // messages that arrived while scrolled up
 let order = [];                // every message id in chronological order (incl. hidden)
@@ -786,6 +811,13 @@ function enterSession(code){
     stream.classList.toggle("no-msg-copy", snap.val() !== true);
   });
 
+  // Default language for bare ``` blocks (rendering only). Re-render on change.
+  langRef = db.ref("sessions/" + code + "/meta/defaultLang");
+  langHandler = langRef.on("value", function(snap){
+    const v = normalizeLang(snap.val());
+    if(v !== defaultLang){ defaultLang = v; rerenderAll(stream); }
+  });
+
   messagesRef = db.ref("sessions/" + code + "/messages").orderByKey();
   messagesHandler = messagesRef.on("child_added", function(snap){
     const id = snap.key;
@@ -842,6 +874,9 @@ function leave(){
   nameRef = null; nameHandler = null;
   if(allowCopyRef && allowCopyHandler){ allowCopyRef.off("value", allowCopyHandler); }
   allowCopyRef = null; allowCopyHandler = null;
+  if(langRef && langHandler){ langRef.off("value", langHandler); }
+  langRef = null; langHandler = null;
+  defaultLang = "";
   stream.classList.add("no-msg-copy");
   currentSession = null;
   messageStore.clear();

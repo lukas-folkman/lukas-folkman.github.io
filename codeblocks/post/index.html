@@ -126,6 +126,8 @@ button{font-family:inherit;cursor:pointer;}
   padding:7px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;user-select:none;}
 .allow-copy:hover{background:var(--bg-panel);}
 .allow-copy input{margin:0;accent-color:var(--accent);cursor:pointer;}
+.allow-copy select{font-family:inherit;font-size:13px;font-weight:600;color:var(--text);background:var(--bg);
+  border:1px solid var(--border);border-radius:6px;padding:1px 4px;cursor:pointer;}
 
 /* Login form */
 .login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;}
@@ -388,6 +390,9 @@ button{font-family:inherit;cursor:pointer;}
   <div class="actions" id="headerActions" style="display:none">
     <span id="sessionActions" style="display:none">
       <label class="allow-copy" title="Show the Copy button under each message for students (code-block and inline-code copy buttons are always shown)"><input type="checkbox" id="allowCopyBox"> Allow copy</label>
+      <label class="allow-copy" title="Highlight ``` code blocks that don't name a language as this language (rendering only; messages are unchanged)">Code <select id="langSelect">
+        <option value="">None</option><option value="java">Java</option><option value="python">Python</option><option value="javascript">JS</option><option value="sql">SQL</option>
+      </select></label>
       <button class="btn secondary" id="copyLinkBtn" type="button">Copy link</button>
       <button class="btn secondary" id="exportMdBtn" type="button">Export Md</button>
       <button class="btn secondary" id="exportJsonBtn" type="button">Export JSON</button>
@@ -735,8 +740,20 @@ function fmtTime(ts){
 
 // Run highlight.js over any fenced code blocks (that declared a language)
 // inside a message wrap. No-op if the CDN script hasn't loaded.
+// Session default language for fenced blocks that don't name one (hljs name;
+// "" = none). Applied at render time only — stored Markdown is never changed.
+const DEFAULT_LANGS = ["java", "python", "javascript", "sql"];
+let defaultLang = "";
+function normalizeLang(v){ return DEFAULT_LANGS.indexOf(v) >= 0 ? v : ""; }
+
 function highlightWrap(el){
   if(!window.hljs || !el) return;
+  // Tag bare ``` blocks with the session default so highlight.js treats them
+  // exactly like ```java (etc.). Explicit languages already have a class.
+  if(defaultLang && window.hljs.getLanguage && window.hljs.getLanguage(defaultLang)){
+    const bare = el.querySelectorAll('.code-block code:not([class*="language-"])');
+    for(let i = 0; i < bare.length; i++) bare[i].classList.add("language-" + defaultLang);
+  }
   const nodes = el.querySelectorAll('.code-block code[class*="language-"]');
   for(let i = 0; i < nodes.length; i++){ try { window.hljs.highlightElement(nodes[i]); } catch(e){} }
 }
@@ -776,6 +793,17 @@ function removeMessage(container, id){
   const wrap = container.querySelector('[data-msg-id="' + id + '"]');
   if(wrap) wrap.remove();
   messageStore.delete(id);
+}
+
+// Re-render every message currently in the DOM from its raw text (used when
+// the default language changes — highlighting can't be undone in place).
+function rerenderAll(container){
+  const wraps = container.querySelectorAll(".msg-wrap");
+  for(let i = 0; i < wraps.length; i++){
+    const id = wraps[i].dataset.msgId;
+    const raw = messageStore.get(id);
+    if(raw !== undefined) updateMessage(container, id, raw);
+  }
 }
 
 function wireCopyDelegation(container){
@@ -827,7 +855,7 @@ let messagesRef = null;        // current messages ref (to .off())
 let messagesHandler = null;    // current child_added handler
 let changedHandler = null;     // current child_changed handler
 let removedHandler = null;     // current child_removed handler
-const sessionMeta = {};        // id -> { name, createdAt, allowCopy } (kept in sync by loadSessions)
+const sessionMeta = {};        // id -> { name, createdAt, allowCopy, defaultLang } (kept in sync by loadSessions)
 
 wireCopyDelegation(stream);
 
@@ -945,9 +973,9 @@ function deleteSession(id){
    Import JSON). Gets a NEW code, keeps each message's original ts + shared,
    and its fresh createdAt puts it at the top of the sidebar.
    `messages` = [{ text, ts, shared }] in chronological order.
-   `allowCopy` carries over the source session's "Allow copy" setting.
+   `allowCopy` / `lang` carry over the source session's "Allow copy" and default code language.
    ============================================================ */
-function createSessionFromData(name, messages, allowCopy){
+function createSessionFromData(name, messages, allowCopy, lang){
   const id = generateSessionCode();
   const baseRef = db.ref("sessions/" + id + "/messages");
   const msgObj = {};
@@ -961,9 +989,11 @@ function createSessionFromData(name, messages, allowCopy){
   const meta = { createdAt: firebase.database.ServerValue.TIMESTAMP };
   if(name) meta.name = name;
   if(allowCopy === true) meta.allowCopy = true; // only written when ticked (missing = false)
+  lang = normalizeLang(lang);
+  if(lang) meta.defaultLang = lang;             // only written when set (missing = none)
   const payload = { meta: meta };
   if(Object.keys(msgObj).length) payload.messages = msgObj;
-  sessionMeta[id] = { name: name || "", createdAt: Date.now(), allowCopy: allowCopy === true };
+  sessionMeta[id] = { name: name || "", createdAt: Date.now(), allowCopy: allowCopy === true, defaultLang: lang };
   // Write meta + messages as one atomic child update (see Section 5.1 — a write
   // at the {id} level itself would be denied).
   return db.ref("sessions/" + id).update(payload).then(function(){ openSession(id); return id; });
@@ -984,7 +1014,7 @@ function duplicateSession(srcId){
       input: true, inputValue: meta.name || "", placeholder: "Session name",
       okLabel: "Duplicate",
       onOk: function(name){
-        createSessionFromData(name, messages, meta.allowCopy === true).catch(function(err){ alert("Duplicate failed: " + (err && err.message)); });
+        createSessionFromData(name, messages, meta.allowCopy === true, meta.defaultLang).catch(function(err){ alert("Duplicate failed: " + (err && err.message)); });
       }
     });
   }).catch(function(err){ alert("Could not read session: " + (err && err.message)); });
@@ -1010,7 +1040,7 @@ importInput.addEventListener("change", function(e){
       input: true, inputValue: (data.name || ""), placeholder: "Session name",
       okLabel: "Import",
       onOk: function(name){
-        createSessionFromData(name, data.messages, data.allowCopy === true).catch(function(err){ alert("Import failed: " + (err && err.message)); });
+        createSessionFromData(name, data.messages, data.allowCopy === true, data.defaultLang).catch(function(err){ alert("Import failed: " + (err && err.message)); });
       }
     });
   };
@@ -1076,15 +1106,39 @@ function loadSessions(){
       const msgs = (val[id] && val[id].messages) || null;
       let lastTs = 0;
       if(msgs){ for(const k in msgs){ const t = msgs[k] && msgs[k].ts; if(t && t > lastTs) lastTs = t; } }
-      sessionMeta[id] = { name: meta.name || "", createdAt: meta.createdAt || 0, allowCopy: meta.allowCopy === true };
+      sessionMeta[id] = { name: meta.name || "", createdAt: meta.createdAt || 0, allowCopy: meta.allowCopy === true, defaultLang: normalizeLang(meta.defaultLang) };
       return { id: id, name: meta.name || "", createdAt: meta.createdAt || 0, lastTs: lastTs };
     });
     items.sort(function(a, b){ return b.createdAt - a.createdAt; });
     renderSessionList(items);
     updateHeading(); // reflect a rename into the active heading live
     syncAllowCopy(); // reflect an allow-copy change (e.g. from another tab)
+    syncLang();
   });
 }
+
+/* --- Default code language dropdown (per session: meta/defaultLang, missing = none) ---
+   Bare ``` blocks are highlighted as this language on both pages. */
+const langSelect = document.getElementById("langSelect");
+function syncLang(){
+  const v = (activeSession && sessionMeta[activeSession] && sessionMeta[activeSession].defaultLang) || "";
+  langSelect.value = v;
+  if(v !== defaultLang){ defaultLang = v; rerenderAll(stream); }
+}
+langSelect.addEventListener("change", function(){
+  if(!activeSession) return;
+  const id = activeSession, prev = (sessionMeta[id] && sessionMeta[id].defaultLang) || "";
+  const val = normalizeLang(langSelect.value);
+  sessionMeta[id] = sessionMeta[id] || {};
+  sessionMeta[id].defaultLang = val;
+  syncLang();
+  db.ref("sessions/" + id + "/meta/defaultLang").set(val || null)
+    .catch(function(err){
+      sessionMeta[id].defaultLang = prev;
+      syncLang();
+      alert("Could not change code language: " + (err && err.message));
+    });
+});
 
 /* --- "Allow copy" tick box (per session: meta/allowCopy, missing = false) ---
    Only affects the students' whole-message Copy button; the teacher's own
@@ -1207,6 +1261,7 @@ function openSession(id){
   stream.innerHTML = "";
   updateHeading();
   syncAllowCopy();
+  syncLang();
   sessionActions.style.display = "contents"; // reveal copy/export buttons
   mainEmpty.style.display = "none";
   stream.style.display = "flex";
@@ -1289,7 +1344,7 @@ document.getElementById("newSessionBtn").addEventListener("click", function(){
       const id = generateSessionCode();
       const meta = { createdAt: firebase.database.ServerValue.TIMESTAMP };
       if(name) meta.name = name;
-      sessionMeta[id] = { name: name, createdAt: Date.now(), allowCopy: false };
+      sessionMeta[id] = { name: name, createdAt: Date.now(), allowCopy: false, defaultLang: "" };
       db.ref("sessions/" + id + "/meta").set(meta)
         .then(function(){ openSession(id); })
         .catch(function(err){ alert("Could not create session: " + (err && err.message)); });
@@ -1371,7 +1426,7 @@ function exportSession(format){
     const name = meta.name || "";
     if(format === "json"){
       const data = { session: id, name: name, createdAt: meta.createdAt || null,
-        allowCopy: meta.allowCopy === true, exportedAt: Date.now(), messages: msgs };
+        allowCopy: meta.allowCopy === true, defaultLang: normalizeLang(meta.defaultLang) || null, exportedAt: Date.now(), messages: msgs };
       downloadFile("codeblocks-" + id + ".json", JSON.stringify(data, null, 2), "application/json");
     } else {
       downloadFile("codeblocks-" + id + ".md", buildMarkdown(id, name, meta.createdAt, msgs), "text/markdown;charset=utf-8");
