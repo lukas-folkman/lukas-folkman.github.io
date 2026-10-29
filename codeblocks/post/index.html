@@ -217,7 +217,10 @@ button{font-family:inherit;cursor:pointer;}
 }
 .composer textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent);}
 .composer-actions{display:flex;align-items:center;justify-content:flex-end;gap:10px;}
-.composer .hint{font-size:11px;color:var(--text-muted);}
+.composer .hint{font-size:11px;color:var(--text-muted);text-align:right;}
+/* Post with a smaller "Code" (post as code block) button underneath. */
+.post-stack{display:flex;flex-direction:column;align-items:stretch;gap:4px;flex:none;}
+.btn.small{padding:3px 10px;font-size:11.5px;font-weight:600;border-radius:6px;}
 .stream-hint{color:var(--text-muted);font-size:14px;padding:8px 2px;}
 
 /* Themed modal (replaces native prompt/confirm) */
@@ -440,8 +443,11 @@ button{font-family:inherit;cursor:pointer;}
       <div class="composer-inner">
         <textarea id="composerInput" placeholder="Type a message — plain text or Markdown (fenced ``` code blocks supported)…"></textarea>
         <div class="composer-actions">
-          <span class="hint">Ctrl+Enter to post</span>
-          <button class="btn" id="postBtn" type="button">Post</button>
+          <span class="hint" id="composerHint">Ctrl+Enter to post</span>
+          <div class="post-stack">
+            <button class="btn" id="postBtn" type="button">Post</button>
+            <button class="btn secondary small" id="postCodeBtn" type="button" title="Post the whole message as a code block">Code</button>
+          </div>
         </div>
       </div>
     </div>
@@ -915,7 +921,10 @@ modalCancel.addEventListener("click", closeModal);
 modalOverlay.addEventListener("click", function(e){ if(e.target === modalOverlay) closeModal(); });
 modalInput.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); confirmModal(); } });
 // In the textarea, Ctrl/Cmd+Enter confirms (plain Enter inserts a newline).
-modalTextarea.addEventListener("keydown", function(e){ if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); confirmModal(); } });
+modalTextarea.addEventListener("keydown", function(e){
+  if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); confirmModal(); }
+  else if(isCodeShortcut(e)){ e.preventDefault(); toggleCodeInTextarea(modalTextarea); }
+});
 document.addEventListener("keydown", function(e){ if(e.key === "Escape" && modalOverlay.classList.contains("open")) closeModal(); });
 
 // Rename any session by id (used by the heading and the sidebar pencil).
@@ -1437,10 +1446,21 @@ document.getElementById("exportJsonBtn").addEventListener("click", function(){ e
 document.getElementById("exportMdBtn").addEventListener("click", function(){ exportSession("md"); });
 
 /* --- Post --- */
-function postMessage(){
+// Wrap a whole message in a ``` block for "post as code". Leading blank lines
+// and trailing whitespace are dropped (first-line indentation is kept). If the
+// text already contains a ``` fence line it is posted unchanged, because the
+// renderer doesn't support nested fences.
+function wrapAsCodeBlock(text){
+  if(/^```/m.test(text)) return text;
+  const body = text.replace(/^(?:[ \t]*\n)+/, "").replace(/\s+$/, "");
+  return "```\n" + body + "\n```";
+}
+
+function postMessage(asCode){
   if(!activeSession) return;
-  const text = composerInput.value;
+  let text = composerInput.value;
   if(!text.trim()) return;
+  if(asCode === true) text = wrapAsCodeBlock(text);
   db.ref("sessions/" + activeSession + "/messages").push({
     text: text,
     ts: firebase.database.ServerValue.TIMESTAMP,
@@ -1448,10 +1468,62 @@ function postMessage(){
   }).then(function(){ composerInput.value = ""; composerInput.focus(); })
     .catch(function(err){ alert("Post failed: " + (err && err.message)); });
 }
-document.getElementById("postBtn").addEventListener("click", postMessage);
+document.getElementById("postBtn").addEventListener("click", function(){ postMessage(false); });
+document.getElementById("postCodeBtn").addEventListener("click", function(){ postMessage(true); });
+
+/* ============================================================
+   Code shortcuts (composer + edit modal)
+   Mod+E (Cmd on Mac, Ctrl elsewhere): GitHub-style —
+     nothing selected      -> insert an empty ``` block, cursor inside
+     multi-line selection  -> wrap it in a ``` block
+     part of one line      -> wrap it in `inline code`
+   Mod+Shift+Enter (composer): post the whole message as a code block.
+   Edits go through execCommand("insertText") so native undo (Mod+Z) works.
+   ============================================================ */
+const IS_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent);
+const MOD = IS_MAC ? "⌘" : "Ctrl+";
+// On Mac only Cmd counts (Ctrl+E is the native "end of line" there).
+function isModKey(e){ return IS_MAC ? (e.metaKey && !e.ctrlKey) : (e.ctrlKey && !e.metaKey); }
+function isCodeShortcut(e){ return isModKey(e) && !e.shiftKey && !e.altKey && (e.key === "e" || e.key === "E" || e.code === "KeyE"); }
+
+function insertIntoTextarea(ta, start, end, str, selStart, selEnd){
+  ta.focus();
+  ta.setSelectionRange(start, end);
+  let ok = false;
+  try { ok = document.execCommand("insertText", false, str); } catch(err){}
+  if(!ok) ta.setRangeText(str, start, end, "end"); // fallback (no undo entry)
+  ta.setSelectionRange(start + selStart, start + selEnd);
+}
+
+function toggleCodeInTextarea(ta){
+  const v = ta.value, s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = v.slice(s, e);
+  const atLineStart = s === 0 || v[s - 1] === "\n";
+  const atLineEnd = e === v.length || v[e] === "\n";
+  const pre = atLineStart ? "" : "\n";
+  const post = atLineEnd ? "" : "\n";
+  if(sel === ""){
+    const str = pre + "```\n\n```" + post;
+    const caret = pre.length + 4;                   // the empty middle line
+    insertIntoTextarea(ta, s, e, str, caret, caret);
+  } else if(sel.indexOf("\n") >= 0){
+    const body = sel.replace(/\n+$/, "");
+    const str = pre + "```\n" + body + "\n```" + post;
+    const end = str.length - post.length;           // caret after closing fence
+    insertIntoTextarea(ta, s, e, str, end, end);
+  } else {
+    const str = "`" + sel + "`";
+    insertIntoTextarea(ta, s, e, str, 1, 1 + sel.length); // keep the text selected
+  }
+}
+
 composerInput.addEventListener("keydown", function(e){
-  if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); postMessage(); }
+  if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); postMessage(e.shiftKey); }
+  else if(isCodeShortcut(e)){ e.preventDefault(); toggleCodeInTextarea(composerInput); }
 });
+document.getElementById("composerHint").textContent =
+  MOD + "Enter post · " + MOD + "⇧Enter post as code · " + MOD + "E code block";
+document.getElementById("postCodeBtn").title = "Post the whole message as a code block (" + MOD + "⇧Enter)";
 
 /* ============================================================
    Page-width slider (shared behaviour with student page)
