@@ -1240,6 +1240,7 @@ function addMsgControls(wrap){
   edit.innerHTML = PEN_SVG + '<span>Edit</span>';
   const del = document.createElement("button");
   del.className = "msg-del-btn"; del.type = "button"; del.setAttribute("aria-label", "Delete message");
+  del.title = "Shift-click to delete without confirming";
   del.innerHTML = BIN_SVG + '<span>Delete</span>';
   const share = document.createElement("button");
   share.className = "msg-share-btn"; share.type = "button";
@@ -1313,8 +1314,14 @@ function editMessage(id){
     }
   });
 }
-function deleteMessage(id){
+// skipConfirm (Shift-click on Delete) removes immediately without the modal.
+function deleteMessage(id, skipConfirm){
   if(!activeSession) return;
+  if(skipConfirm){
+    db.ref("sessions/" + activeSession + "/messages/" + id).remove()
+      .catch(function(err){ alert("Delete failed: " + (err && err.message)); });
+    return;
+  }
   openModal({
     title: "Delete message",
     message: "Do you really want to delete this message?",
@@ -1339,7 +1346,7 @@ stream.addEventListener("click", function(e){
   const dBtn = e.target.closest(".msg-del-btn");
   const sBtn = e.target.closest(".msg-share-btn");
   if(eBtn){ const w = eBtn.closest(".msg-wrap"); if(w) editMessage(w.dataset.msgId); }
-  else if(dBtn){ const w = dBtn.closest(".msg-wrap"); if(w) deleteMessage(w.dataset.msgId); }
+  else if(dBtn){ const w = dBtn.closest(".msg-wrap"); if(w) deleteMessage(w.dataset.msgId, e.shiftKey); }
   else if(sBtn){ const w = sBtn.closest(".msg-wrap"); if(w) toggleShare(w.dataset.msgId); }
 });
 
