@@ -220,6 +220,31 @@ button{font-family:inherit;cursor:pointer;}
 .copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
 .copy-btn svg{width:13px;height:13px;flex:none;}
 .code-block pre{margin:0;padding:16px 18px;overflow-x:auto;}
+/* Collapsible code blocks (blocks longer than the session's collapseAt). Lines
+   are only hidden visually (max-height), so Copy always copies the full block. */
+.block-tools{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;z-index:5;}
+.block-tools .copy-btn{position:static;}
+.block-tool{
+  opacity:0;visibility:hidden;transform:translateY(-4px);
+  transition:opacity .15s ease, transform .15s ease, background .15s ease;
+  background:var(--bg);border:1px solid var(--code-border);color:var(--code-text);
+  font-size:12px;padding:5px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1);
+}
+button.block-tool{cursor:pointer;font-family:inherit;}
+button.block-tool:hover{background:rgba(146,64,42,0.08);}
+.block-lines{color:var(--text-muted);cursor:default;}
+.code-block:hover .block-tool, .block-tool:focus-visible{opacity:1;visibility:visible;transform:translateY(0);}
+.code-block.collapsed pre{overflow-y:hidden;cursor:pointer;}
+.collapse-bar{
+  position:relative;display:block;width:100%;border:none;border-top:1px solid var(--code-border);
+  background:var(--bg-panel);color:var(--code-text);font-family:inherit;font-size:12.5px;font-weight:600;
+  padding:7px 12px;border-radius:0 0 10px 10px;cursor:pointer;text-align:center;
+}
+.collapse-bar:hover{background:var(--inline-code-bg);}
+.code-block.collapsed .collapse-bar::before{
+  content:"";position:absolute;left:0;right:0;bottom:100%;height:24px;pointer-events:none;
+  background:linear-gradient(to bottom, transparent, var(--code-bg));
+}
 .msg-content .code-block code{
   background:none;color:var(--text);padding:0;border-radius:0;
   font-size:0.86em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
@@ -282,6 +307,8 @@ button{font-family:inherit;cursor:pointer;}
   <div class="header-right">
   <div class="actions" id="headerActions" style="display:none">
     <span id="currentCode" class="code-pill" style="display:none"></span>
+    <button class="btn secondary" id="expandAllBtn" type="button" title="Expand all long code blocks">Expand all</button>
+    <button class="btn secondary" id="collapseAllBtn" type="button" title="Collapse all long code blocks">Collapse all</button>
     <button class="btn secondary" id="leaveBtn" type="button">Leave</button>
   </div>
   <div class="palette-picker" role="group" aria-label="Colour theme">
@@ -625,6 +652,7 @@ function appendMessage(container, id, rawText, ts){
     '</div>';
   container.appendChild(wrap);
   highlightWrap(wrap);
+  setupCollapsibles(wrap);
   return wrap;
 }
 
@@ -634,7 +662,7 @@ function updateMessage(container, id, rawText){
   if(!wrap) return;
   messageStore.set(id, rawText);
   const contentEl = wrap.querySelector(".msg-content");
-  if(contentEl){ contentEl.innerHTML = renderMarkdown(rawText); highlightWrap(wrap); }
+  if(contentEl){ contentEl.innerHTML = renderMarkdown(rawText); highlightWrap(wrap); setupCollapsibles(wrap); }
 }
 
 // Remove a message that was deleted.
@@ -653,6 +681,119 @@ function rerenderAll(container){
     const raw = messageStore.get(id);
     if(raw !== undefined) updateMessage(container, id, raw);
   }
+}
+
+/* ============================================================
+   Collapsible code blocks (shared with the other page)
+   Blocks with more than `collapseAt` lines (per session: meta/collapseAt,
+   default 20) show the first PREVIEW_LINES lines + a "Show all N lines" bar.
+   Purely visual (max-height) — Copy copies the whole block, stored Markdown
+   is untouched. Each viewer's expand/collapse choice is per block, kept in
+   memory across re-renders (edit, language change); a reload starts collapsed.
+   ============================================================ */
+const COLLAPSE_DEFAULT = 20, COLLAPSE_MAX = 1000000, PREVIEW_LINES = 10;
+let collapseAt = COLLAPSE_DEFAULT;
+let expandByDefault = false;          // set by Expand all / Collapse all
+const blockState = new Map();         // "msgId:blockIndex" -> true (expanded) / false
+function normalizeCollapseAt(v){
+  const n = parseInt(v, 10);
+  return (isFinite(n) && n >= 1) ? Math.min(n, COLLAPSE_MAX) : COLLAPSE_DEFAULT;
+}
+
+function applyBlockState(block, expanded){
+  const pre = block.querySelector("pre");
+  const n = block.dataset.lines;
+  block.classList.toggle("collapsed", !expanded);
+  if(pre){
+    if(expanded) pre.style.maxHeight = "";
+    else {
+      // Measure the real line pitch from the full content height, then show
+      // PREVIEW_LINES clear lines plus a hint of the next one under the fade.
+      const cs = getComputedStyle(pre);
+      const padT = parseFloat(cs.paddingTop) || 0, padB = parseFloat(cs.paddingBottom) || 0;
+      const pitch = (pre.scrollHeight - padT - padB) / (Number(n) || 1) || 20;
+      pre.style.maxHeight = Math.round(padT + pitch * (PREVIEW_LINES + 0.6)) + "px";
+    }
+  }
+  const bar = block.querySelector(".collapse-bar");
+  if(bar){
+    bar.textContent = expanded ? "▴ Show less" : "▾ Show all " + n + " lines";
+    bar.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+  const top = block.querySelector(".collapse-top-btn");
+  if(top){
+    top.textContent = expanded ? "Collapse" : "Expand";
+    top.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+}
+
+// Called after every render of a message (append + update).
+function setupCollapsibles(wrap){
+  if(!wrap) return;
+  const id = wrap.dataset.msgId;
+  const blocks = wrap.querySelectorAll(".code-block");
+  for(let i = 0; i < blocks.length; i++){
+    const b = blocks[i];
+    const code = b.querySelector("code");
+    if(!code) continue;
+    const n = code.textContent.split("\n").length;
+    if(n <= collapseAt) continue;
+    b.classList.add("collapsible");
+    b.dataset.key = id + ":" + i;
+    b.dataset.lines = n;
+    // Toolbar: [N lines] [Expand/Collapse] [Copy] (Copy moved in from its own slot).
+    const tools = document.createElement("div");
+    tools.className = "block-tools";
+    const badge = document.createElement("span");
+    badge.className = "block-tool block-lines";
+    badge.textContent = n + " lines";
+    const top = document.createElement("button");
+    top.type = "button"; top.className = "block-tool collapse-top-btn";
+    tools.appendChild(badge);
+    tools.appendChild(top);
+    const copy = b.querySelector(".copy-btn");
+    if(copy) tools.appendChild(copy);
+    b.insertBefore(tools, b.firstChild);
+    const bar = document.createElement("button");
+    bar.type = "button"; bar.className = "collapse-bar";
+    b.appendChild(bar);
+    const st = blockState.get(b.dataset.key);
+    applyBlockState(b, st === undefined ? expandByDefault : st);
+  }
+}
+
+function toggleBlock(block, expanded){
+  blockState.set(block.dataset.key, expanded);
+  applyBlockState(block, expanded);
+  // After collapsing, keep the block's top in view so the reader isn't lost.
+  if(!expanded){
+    try { block.scrollIntoView({ block: "nearest" }); } catch(e){ block.scrollIntoView(); }
+  }
+}
+
+function setAllBlocks(container, expanded){
+  expandByDefault = expanded;
+  blockState.clear();
+  const blocks = container.querySelectorAll(".code-block.collapsible");
+  for(let i = 0; i < blocks.length; i++) applyBlockState(blocks[i], expanded);
+}
+
+function wireCollapseDelegation(container){
+  container.addEventListener("click", function(e){
+    const btn = e.target.closest(".collapse-bar, .collapse-top-btn");
+    if(btn){
+      const b = btn.closest(".code-block");
+      if(b) toggleBlock(b, b.classList.contains("collapsed"));
+      return;
+    }
+    // Clicking the faded preview expands it (but not when selecting text).
+    const pre = e.target.closest(".code-block.collapsed pre");
+    if(pre){
+      const sel = window.getSelection ? window.getSelection() : null;
+      if(sel && !sel.isCollapsed) return;
+      toggleBlock(pre.closest(".code-block"), true);
+    }
+  });
 }
 
 function wireCopyDelegation(container){
@@ -700,12 +841,15 @@ let allowCopyRef = null;       // live listener on this session's meta/allowCopy
 let allowCopyHandler = null;
 let langRef = null;            // live listener on this session's meta/defaultLang
 let langHandler = null;
+let collapseRef = null;        // live listener on this session's meta/collapseAt
+let collapseHandler = null;
 let gotFirst = false;
 let unseen = 0;                // messages that arrived while scrolled up
 let order = [];                // every message id in chronological order (incl. hidden)
 let msgData = {};              // id -> { text, ts, shared } for every message
 
 wireCopyDelegation(stream);
+wireCollapseDelegation(stream);
 
 /* ---- Persistent bottom bar: default hint <-> new-messages alert ---- */
 function isAtBottom(){
@@ -818,6 +962,13 @@ function enterSession(code){
     if(v !== defaultLang){ defaultLang = v; rerenderAll(stream); }
   });
 
+  // Collapse threshold for long code blocks (default 20). Re-render on change.
+  collapseRef = db.ref("sessions/" + code + "/meta/collapseAt");
+  collapseHandler = collapseRef.on("value", function(snap){
+    const v = normalizeCollapseAt(snap.val());
+    if(v !== collapseAt){ collapseAt = v; rerenderAll(stream); }
+  });
+
   messagesRef = db.ref("sessions/" + code + "/messages").orderByKey();
   messagesHandler = messagesRef.on("child_added", function(snap){
     const id = snap.key;
@@ -877,6 +1028,9 @@ function leave(){
   if(langRef && langHandler){ langRef.off("value", langHandler); }
   langRef = null; langHandler = null;
   defaultLang = "";
+  if(collapseRef && collapseHandler){ collapseRef.off("value", collapseHandler); }
+  collapseRef = null; collapseHandler = null;
+  collapseAt = COLLAPSE_DEFAULT; expandByDefault = false; blockState.clear();
   stream.classList.add("no-msg-copy");
   currentSession = null;
   messageStore.clear();
@@ -900,6 +1054,8 @@ document.getElementById("joinForm").addEventListener("submit", function(e){
   join(codeInput.value);
 });
 document.getElementById("leaveBtn").addEventListener("click", leave);
+document.getElementById("expandAllBtn").addEventListener("click", function(){ setAllBlocks(stream, true); });
+document.getElementById("collapseAllBtn").addEventListener("click", function(){ setAllBlocks(stream, false); });
 
 // Auto-join via ?session=CODE
 (function(){

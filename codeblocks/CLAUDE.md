@@ -33,7 +33,7 @@ self-contained HTML file** (inline CSS + JS). Keep it that way.
 sessions/
   {CODE}/                       # 6 chars from "ABCDEFGHJKMNPQRSTUVWXYZ23456789" (no 0/O/1/I/L)
     meta/   { name?: string, createdAt: serverTimestamp, allowCopy?: bool,
-              defaultLang?: "java"|"python"|"javascript"|"sql" }
+              defaultLang?: "java"|"python"|"javascript"|"sql", collapseAt?: int }
     messages/
       {pushKey}: { text: string, ts: serverTimestamp, shared: bool }
 ```
@@ -42,6 +42,7 @@ sessions/
 - `shared` missing or `true` ⇒ visible; `false` ⇒ hidden from students.
 - `meta/allowCopy` missing or `false` ⇒ students don't get the whole-message Copy button (default). Only written as `true` on create (duplicate/import) so session creation works even if rules don't list the field; the tick box writes `true`/`false`. **The Firebase rules must allow `meta/allowCopy`.**
 - `meta/defaultLang` missing ⇒ bare ``` blocks stay unhighlighted. Set ⇒ they're highlighted as that language **at render time only** (stored Markdown never changes). Values are hljs language names, whitelisted by `normalizeLang` / `DEFAULT_LANGS`. Rules must allow it too.
+- `meta/collapseAt` missing ⇒ 20. Code blocks with **more than** this many lines render collapsed. Only written when ≠ 20 (set to null when back to 20). A huge number effectively disables collapsing (no separate off switch, by design). Rules must allow it.
 - Session code is generated client-side with `Math.random()`; no collision check.
 
 ### Security rules (not in this folder — live in Firebase console)
@@ -66,7 +67,11 @@ These blocks MUST stay identical between `index.html` and `post/index.html`
 5. **Message rendering** — `appendMessage`, `updateMessage`, `removeMessage`, `highlightWrap`, `rerenderAll`, `fmtTime` (HH:MM:SS local).
    - **Default language mechanism:** `renderMarkdown` emits `<code class="language-X">` only for ```X fences. `highlightWrap` first adds `language-${defaultLang}` to any `.code-block code` without a language class (if hljs has that language), then runs `hljs.highlightElement` on all `language-*` blocks. Explicit fences always win; inline code untouched.
    - Because hljs replaces text with spans, changing `defaultLang` calls `rerenderAll(stream)`, which re-renders every on-screen message from raw text in `messageStore`.
-6. **Width slider** — 0–100 mapped piecewise: 0→420px, 50→760px (default), 100→2400px; sets `--content-width`; `localStorage["cb_content_width"]`; hidden < 820px.
+6. **Collapsible code blocks** — `COLLAPSE_DEFAULT=20`, `PREVIEW_LINES=10`, `collapseAt`, `expandByDefault`, `blockState`, `normalizeCollapseAt`, `setupCollapsibles` (called after `highlightWrap` in `appendMessage`/`updateMessage`), `applyBlockState`, `toggleBlock`, `setAllBlocks`, `wireCollapseDelegation`.
+   - Purely visual: `pre.style.maxHeight` = top padding + measured line pitch × (10 + 0.6) so 10 clear lines + a hint of the 11th under a 24px fade. Copy still copies the full text; DB/exports untouched; `renderMarkdown` unchanged.
+   - Long blocks get a `.block-tools` toolbar (`N lines` badge, Expand/Collapse, and the Copy button moved into it) and a bottom `.collapse-bar` ("▾ Show all N lines" / "▴ Show less"). Clicking the faded preview expands (unless text is selected). Collapsing scrolls the block's top back into view.
+   - All long blocks start collapsed (no auto-expand of the newest — avoids layout jumps). Per-viewer, per-block state in `blockState` keyed `msgId:blockIndex`, survives re-renders, not reloads. **Expand all / Collapse all** (both headers) set `expandByDefault` (also applies to blocks arriving later) and clear per-block overrides.
+7. **Width slider** — 0–100 mapped piecewise: 0→420px, 50→760px (default), 100→2400px; sets `--content-width`; `localStorage["cb_content_width"]`; hidden < 820px.
 
 Consider extracting these to shared files only if Lukas asks — single-file pages were a deliberate choice.
 
@@ -75,6 +80,7 @@ Consider extracting these to shared files only if Lukas asks — single-file pag
 - Code input normalised: uppercase, strip non-alphanumerics, max 6. Existence check via one-time read of `meta`.
 - URL updated with `history.replaceState` to `?session=CODE` so refresh rejoins; Leave clears it.
 - Header title = live `meta/name` (falls back to code).
+- Live listener on `meta/collapseAt` → `collapseAt` + `rerenderAll`; reset (and `blockState` cleared) on Leave. Header has Expand all / Collapse all (in-session only).
 - Live listener on `meta/defaultLang` → sets `defaultLang` and `rerenderAll` on change; reset to "" on Leave. Hidden messages re-inserted later pick up the current value.
 - Live listener on `meta/allowCopy`: toggles class `no-msg-copy` on `.stream`, which CSS-hides `.msg-copy-btn`. Class is on by default (before data arrives and after Leave). Code-block and inline-code copy buttons always shown.
 - Listens `child_added` / `child_changed` / `child_removed`. Keeps `order[]` + `msgData{}` for **all** messages, including hidden ones, so a re-shared message is re-inserted at its original chronological position (`insertMessageInOrder`).
@@ -86,7 +92,8 @@ Consider extracting these to shared files only if Lukas asks — single-file pag
 
 - Login card → app with resizable sidebar (180–640 px, `localStorage["cb_sidebar_w"]`, drag handle) + main stream + composer.
 - Sidebar: live `on("value")` on whole `sessions` root; sorted by `createdAt` desc; row shows name (or code), code · last message time. Hover tools: rename, duplicate, delete.
-- Header: click title to rename active session. Controls: **Allow copy** tick box, frameless code-language dropdown (Plain/Java/Python/JS/SQL), Copy link (`STUDENT_PAGE_URL?session=CODE`), Export Md, Export JSON (these five only while a session is open), Import JSON, New session, Sign out. (There is deliberately no "Copy session code" button — the code is visible in the title/sidebar.)
+- Header: click title to rename active session. Controls: **Allow copy** tick box, **⇕ N** collapse-threshold number input (`#collapseInput`, commits on change/Enter, invalid ⇒ 20), frameless code-language dropdown (Plain/Java/Python/JS/SQL), Copy link (`STUDENT_PAGE_URL?session=CODE`), Expand all, Collapse all, Export Md, Export JSON (these only while a session is open), Import JSON, New session, Sign out. (There is deliberately no "Copy session code" button — the code is visible in the title/sidebar.)
+- Teacher header is crowded: width slider is 80px with no Narrow/Wide labels; header buttons are compact (6px 8px, 12.5px); action group wraps to a second row below ~1440px.
 - **Allow copy** (`#allowCopyBox`, unticked by default): per-session `meta/allowCopy`; synced from `sessionMeta` via `syncAllowCopy()` on open and on every sidebar refresh; reverts on write failure. Affects students only — the teacher's own message buttons are unchanged.
 - **Code dropdown** (`#langSelect`): per-session `meta/defaultLang` (Plain ⇒ field removed). `syncLang()` on open and every sidebar refresh; re-renders the teacher stream too; reverts on write failure. Export Md leaves fences as typed.
 - Composer: monospace textarea. Posts `{text, ts: SERVER_TIMESTAMP, shared: true}`. Shortcuts (Mod = ⌘ on Mac, Ctrl elsewhere; hint text adapts via `IS_MAC`/`MOD`):
@@ -95,9 +102,9 @@ Consider extracting these to shared files only if Lukas asks — single-file pag
   - Edits use `document.execCommand("insertText")` so native undo works (fallback `setRangeText`). On Mac only Cmd triggers (Ctrl+E is native end-of-line). Avoided ⌘⇧C/⌘⇧K (browser devtools).
 - Per-message hover controls: Copy, Edit (modal textarea, Ctrl/Cmd+Enter saves, empty edit ignored), Delete (confirm; **Shift-click deletes immediately** — messages only, not sessions), Share/Unshare (no confirm — reversible). Card border: green = shared, red = hidden.
 - **Themed modal** (`openModal({title, message, input|textarea, inputValue, placeholder, okLabel, danger, onOk})`) replaces native `prompt/confirm`. Single-line input is trimmed; textarea preserves exact text. Errors still use `alert()`.
-- **Export JSON:** `{session, name, createdAt, allowCopy, defaultLang, exportedAt, messages:[{id, ts, text, shared}]}`, file `codeblocks-{CODE}.json`.
+- **Export JSON:** `{session, name, createdAt, allowCopy, defaultLang, collapseAt, exportedAt, messages:[{id, ts, text, shared}]}`, file `codeblocks-{CODE}.json`.
 - **Export Markdown:** chat-style transcript; messages separated by `---` with blank lines around, bold timestamp, hidden ones tagged `_(hidden from students)_`; message text emitted verbatim at left margin so its own Markdown renders.
-- **Import JSON / Duplicate** → `createSessionFromData(name, messages, allowCopy, lang)`: new code, preserves original `ts`, `shared`, `allowCopy` and `defaultLang` (missing in older JSON ⇒ off/none), fresh `createdAt` (so it tops the sidebar), opens it.
+- **Import JSON / Duplicate** → `createSessionFromData(name, messages, allowCopy, lang, collapse)`: new code, preserves original `ts`, `shared`, `allowCopy`, `defaultLang` and `collapseAt` (missing in older JSON ⇒ off/none), fresh `createdAt` (so it tops the sidebar), opens it.
 - Teacher stream always scrolls to bottom on new message (no "new messages" bar).
 
 ## Conventions / decisions to preserve

@@ -87,6 +87,15 @@ header{
   border:2px solid var(--bg);box-shadow:0 0 0 1px var(--code-border);
 }
 @media (max-width:820px){ .width-control{display:none !important;} }
+/* Teacher header is crowded: compact, label-less width slider, smaller header
+   buttons, and the action group may wrap onto a second row on narrow screens. */
+.width-control{flex:none;width:80px;}
+header .header-right{flex:1 1 auto;min-width:0;justify-content:flex-end;}
+header .actions{flex:1 1 auto;min-width:0;row-gap:6px;}
+header{padding:10px 16px;gap:12px;}
+header .actions{gap:6px;}
+header .btn{padding:6px 8px;font-size:12.5px;}
+header .allow-copy{padding:5px 8px;font-size:12.5px;}
 
 /* Palette picker swatches (between brand and slider) */
 .palette-picker{display:flex;align-items:center;gap:7px;flex:none;}
@@ -126,6 +135,11 @@ button{font-family:inherit;cursor:pointer;}
   padding:7px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;user-select:none;}
 .allow-copy:hover{background:var(--bg-panel);}
 .allow-copy input{margin:0;accent-color:var(--accent);cursor:pointer;}
+/* Collapse threshold (lines) — frameless like the language dropdown. */
+.collapse-at{display:inline-flex;align-items:center;gap:2px;font-size:14px;color:var(--text-muted);cursor:default;}
+.collapse-at input{width:4.2em;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);
+  background:transparent;border:none;border-bottom:1px dashed var(--border);padding:3px 2px;text-align:center;}
+.collapse-at input:focus{outline:none;border-bottom-color:var(--accent);}
 /* Default code language dropdown — bare, no pill frame. */
 .lang-select{font-family:inherit;font-size:13px;font-weight:600;color:var(--text);background:transparent;
   border:none;padding:4px 2px;cursor:pointer;}
@@ -304,6 +318,31 @@ button{font-family:inherit;cursor:pointer;}
 .copy-btn.copied{color:#3F7A39;border-color:rgba(63,122,57,0.4);}
 .copy-btn svg{width:13px;height:13px;flex:none;}
 .code-block pre{margin:0;padding:16px 18px;overflow-x:auto;}
+/* Collapsible code blocks (blocks longer than the session's collapseAt). Lines
+   are only hidden visually (max-height), so Copy always copies the full block. */
+.block-tools{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;z-index:5;}
+.block-tools .copy-btn{position:static;}
+.block-tool{
+  opacity:0;visibility:hidden;transform:translateY(-4px);
+  transition:opacity .15s ease, transform .15s ease, background .15s ease;
+  background:var(--bg);border:1px solid var(--code-border);color:var(--code-text);
+  font-size:12px;padding:5px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1);
+}
+button.block-tool{cursor:pointer;font-family:inherit;}
+button.block-tool:hover{background:rgba(146,64,42,0.08);}
+.block-lines{color:var(--text-muted);cursor:default;}
+.code-block:hover .block-tool, .block-tool:focus-visible{opacity:1;visibility:visible;transform:translateY(0);}
+.code-block.collapsed pre{overflow-y:hidden;cursor:pointer;}
+.collapse-bar{
+  position:relative;display:block;width:100%;border:none;border-top:1px solid var(--code-border);
+  background:var(--bg-panel);color:var(--code-text);font-family:inherit;font-size:12.5px;font-weight:600;
+  padding:7px 12px;border-radius:0 0 10px 10px;cursor:pointer;text-align:center;
+}
+.collapse-bar:hover{background:var(--inline-code-bg);}
+.code-block.collapsed .collapse-bar::before{
+  content:"";position:absolute;left:0;right:0;bottom:100%;height:24px;pointer-events:none;
+  background:linear-gradient(to bottom, transparent, var(--code-bg));
+}
 .msg-content .code-block code{
   background:none;color:var(--text);padding:0;border-radius:0;
   font-size:0.86em;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
@@ -385,19 +424,20 @@ button{font-family:inherit;cursor:pointer;}
     <svg class="icon" viewBox="60 25 210 210" fill="none" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"><path d="M70,90 L200,90 L200,220 L70,220 Z"/><path d="M70,90 L130,40 L260,40 L200,90"/><path d="M260,40 L260,170 L200,220"/></g><text x="135" y="155" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="105" font-weight="bold" fill="currentColor" text-anchor="middle" dominant-baseline="central">C</text></svg>
     <span id="titleLabel">Post Codeblocks</span>
   </div>
-  <div class="width-control" id="widthControl" style="display:none">
-    <span class="width-label">Narrow</span>
+  <div class="width-control" id="widthControl" style="display:none" title="Message width">
     <input type="range" id="widthSlider" min="0" max="100" step="1" value="50" aria-label="Message width">
-    <span class="width-label">Wide</span>
   </div>
   <div class="header-right">
   <div class="actions" id="headerActions" style="display:none">
     <span id="sessionActions" style="display:none">
       <label class="allow-copy" title="Show the Copy button under each message for students (code-block and inline-code copy buttons are always shown)"><input type="checkbox" id="allowCopyBox"> Allow copy</label>
+      <label class="collapse-at" title="Collapse code blocks longer than this many lines (use a huge number to effectively disable)">⇕<input id="collapseInput" type="number" min="1" step="1" inputmode="numeric" aria-label="Collapse code blocks longer than N lines"></label>
       <select id="langSelect" class="lang-select" aria-label="Default code language" title="Highlight ``` code blocks that don't name a language as this language (rendering only; messages are unchanged)">
         <option value="">Plain</option><option value="java">Java</option><option value="python">Python</option><option value="javascript">JS</option><option value="sql">SQL</option>
       </select>
       <button class="btn secondary" id="copyLinkBtn" type="button">Copy link</button>
+      <button class="btn secondary" id="expandAllBtn" type="button" title="Expand all long code blocks">Expand all</button>
+      <button class="btn secondary" id="collapseAllBtn" type="button" title="Collapse all long code blocks">Collapse all</button>
       <button class="btn secondary" id="exportMdBtn" type="button">Export Md</button>
       <button class="btn secondary" id="exportJsonBtn" type="button">Export JSON</button>
     </span>
@@ -781,6 +821,7 @@ function appendMessage(container, id, rawText, ts){
     '</div>';
   container.appendChild(wrap);
   highlightWrap(wrap);
+  setupCollapsibles(wrap);
   return wrap;
 }
 
@@ -790,7 +831,7 @@ function updateMessage(container, id, rawText){
   if(!wrap) return;
   messageStore.set(id, rawText);
   const contentEl = wrap.querySelector(".msg-content");
-  if(contentEl){ contentEl.innerHTML = renderMarkdown(rawText); highlightWrap(wrap); }
+  if(contentEl){ contentEl.innerHTML = renderMarkdown(rawText); highlightWrap(wrap); setupCollapsibles(wrap); }
 }
 
 // Remove a message that was deleted.
@@ -809,6 +850,119 @@ function rerenderAll(container){
     const raw = messageStore.get(id);
     if(raw !== undefined) updateMessage(container, id, raw);
   }
+}
+
+/* ============================================================
+   Collapsible code blocks (shared with the other page)
+   Blocks with more than `collapseAt` lines (per session: meta/collapseAt,
+   default 20) show the first PREVIEW_LINES lines + a "Show all N lines" bar.
+   Purely visual (max-height) — Copy copies the whole block, stored Markdown
+   is untouched. Each viewer's expand/collapse choice is per block, kept in
+   memory across re-renders (edit, language change); a reload starts collapsed.
+   ============================================================ */
+const COLLAPSE_DEFAULT = 20, COLLAPSE_MAX = 1000000, PREVIEW_LINES = 10;
+let collapseAt = COLLAPSE_DEFAULT;
+let expandByDefault = false;          // set by Expand all / Collapse all
+const blockState = new Map();         // "msgId:blockIndex" -> true (expanded) / false
+function normalizeCollapseAt(v){
+  const n = parseInt(v, 10);
+  return (isFinite(n) && n >= 1) ? Math.min(n, COLLAPSE_MAX) : COLLAPSE_DEFAULT;
+}
+
+function applyBlockState(block, expanded){
+  const pre = block.querySelector("pre");
+  const n = block.dataset.lines;
+  block.classList.toggle("collapsed", !expanded);
+  if(pre){
+    if(expanded) pre.style.maxHeight = "";
+    else {
+      // Measure the real line pitch from the full content height, then show
+      // PREVIEW_LINES clear lines plus a hint of the next one under the fade.
+      const cs = getComputedStyle(pre);
+      const padT = parseFloat(cs.paddingTop) || 0, padB = parseFloat(cs.paddingBottom) || 0;
+      const pitch = (pre.scrollHeight - padT - padB) / (Number(n) || 1) || 20;
+      pre.style.maxHeight = Math.round(padT + pitch * (PREVIEW_LINES + 0.6)) + "px";
+    }
+  }
+  const bar = block.querySelector(".collapse-bar");
+  if(bar){
+    bar.textContent = expanded ? "▴ Show less" : "▾ Show all " + n + " lines";
+    bar.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+  const top = block.querySelector(".collapse-top-btn");
+  if(top){
+    top.textContent = expanded ? "Collapse" : "Expand";
+    top.setAttribute("aria-expanded", expanded ? "true" : "false");
+  }
+}
+
+// Called after every render of a message (append + update).
+function setupCollapsibles(wrap){
+  if(!wrap) return;
+  const id = wrap.dataset.msgId;
+  const blocks = wrap.querySelectorAll(".code-block");
+  for(let i = 0; i < blocks.length; i++){
+    const b = blocks[i];
+    const code = b.querySelector("code");
+    if(!code) continue;
+    const n = code.textContent.split("\n").length;
+    if(n <= collapseAt) continue;
+    b.classList.add("collapsible");
+    b.dataset.key = id + ":" + i;
+    b.dataset.lines = n;
+    // Toolbar: [N lines] [Expand/Collapse] [Copy] (Copy moved in from its own slot).
+    const tools = document.createElement("div");
+    tools.className = "block-tools";
+    const badge = document.createElement("span");
+    badge.className = "block-tool block-lines";
+    badge.textContent = n + " lines";
+    const top = document.createElement("button");
+    top.type = "button"; top.className = "block-tool collapse-top-btn";
+    tools.appendChild(badge);
+    tools.appendChild(top);
+    const copy = b.querySelector(".copy-btn");
+    if(copy) tools.appendChild(copy);
+    b.insertBefore(tools, b.firstChild);
+    const bar = document.createElement("button");
+    bar.type = "button"; bar.className = "collapse-bar";
+    b.appendChild(bar);
+    const st = blockState.get(b.dataset.key);
+    applyBlockState(b, st === undefined ? expandByDefault : st);
+  }
+}
+
+function toggleBlock(block, expanded){
+  blockState.set(block.dataset.key, expanded);
+  applyBlockState(block, expanded);
+  // After collapsing, keep the block's top in view so the reader isn't lost.
+  if(!expanded){
+    try { block.scrollIntoView({ block: "nearest" }); } catch(e){ block.scrollIntoView(); }
+  }
+}
+
+function setAllBlocks(container, expanded){
+  expandByDefault = expanded;
+  blockState.clear();
+  const blocks = container.querySelectorAll(".code-block.collapsible");
+  for(let i = 0; i < blocks.length; i++) applyBlockState(blocks[i], expanded);
+}
+
+function wireCollapseDelegation(container){
+  container.addEventListener("click", function(e){
+    const btn = e.target.closest(".collapse-bar, .collapse-top-btn");
+    if(btn){
+      const b = btn.closest(".code-block");
+      if(b) toggleBlock(b, b.classList.contains("collapsed"));
+      return;
+    }
+    // Clicking the faded preview expands it (but not when selecting text).
+    const pre = e.target.closest(".code-block.collapsed pre");
+    if(pre){
+      const sel = window.getSelection ? window.getSelection() : null;
+      if(sel && !sel.isCollapsed) return;
+      toggleBlock(pre.closest(".code-block"), true);
+    }
+  });
 }
 
 function wireCopyDelegation(container){
@@ -860,9 +1014,10 @@ let messagesRef = null;        // current messages ref (to .off())
 let messagesHandler = null;    // current child_added handler
 let changedHandler = null;     // current child_changed handler
 let removedHandler = null;     // current child_removed handler
-const sessionMeta = {};        // id -> { name, createdAt, allowCopy, defaultLang } (kept in sync by loadSessions)
+const sessionMeta = {};        // id -> { name, createdAt, allowCopy, defaultLang, collapseAt } (kept in sync by loadSessions)
 
 wireCopyDelegation(stream);
+wireCollapseDelegation(stream);
 
 /* ============================================================
    Themed modal (replaces native prompt/confirm to match the design)
@@ -983,7 +1138,7 @@ function deleteSession(id){
    `messages` = [{ text, ts, shared }] in chronological order.
    `allowCopy` / `lang` carry over the source session's "Allow copy" and default code language.
    ============================================================ */
-function createSessionFromData(name, messages, allowCopy, lang){
+function createSessionFromData(name, messages, allowCopy, lang, collapse){
   const id = generateSessionCode();
   const baseRef = db.ref("sessions/" + id + "/messages");
   const msgObj = {};
@@ -999,9 +1154,11 @@ function createSessionFromData(name, messages, allowCopy, lang){
   if(allowCopy === true) meta.allowCopy = true; // only written when ticked (missing = false)
   lang = normalizeLang(lang);
   if(lang) meta.defaultLang = lang;             // only written when set (missing = none)
+  collapse = normalizeCollapseAt(collapse);
+  if(collapse !== COLLAPSE_DEFAULT) meta.collapseAt = collapse; // only written when non-default
   const payload = { meta: meta };
   if(Object.keys(msgObj).length) payload.messages = msgObj;
-  sessionMeta[id] = { name: name || "", createdAt: Date.now(), allowCopy: allowCopy === true, defaultLang: lang };
+  sessionMeta[id] = { name: name || "", createdAt: Date.now(), allowCopy: allowCopy === true, defaultLang: lang, collapseAt: collapse };
   // Write meta + messages as one atomic child update (see Section 5.1 — a write
   // at the {id} level itself would be denied).
   return db.ref("sessions/" + id).update(payload).then(function(){ openSession(id); return id; });
@@ -1022,7 +1179,7 @@ function duplicateSession(srcId){
       input: true, inputValue: meta.name || "", placeholder: "Session name",
       okLabel: "Duplicate",
       onOk: function(name){
-        createSessionFromData(name, messages, meta.allowCopy === true, meta.defaultLang).catch(function(err){ alert("Duplicate failed: " + (err && err.message)); });
+        createSessionFromData(name, messages, meta.allowCopy === true, meta.defaultLang, meta.collapseAt).catch(function(err){ alert("Duplicate failed: " + (err && err.message)); });
       }
     });
   }).catch(function(err){ alert("Could not read session: " + (err && err.message)); });
@@ -1048,7 +1205,7 @@ importInput.addEventListener("change", function(e){
       input: true, inputValue: (data.name || ""), placeholder: "Session name",
       okLabel: "Import",
       onOk: function(name){
-        createSessionFromData(name, data.messages, data.allowCopy === true, data.defaultLang).catch(function(err){ alert("Import failed: " + (err && err.message)); });
+        createSessionFromData(name, data.messages, data.allowCopy === true, data.defaultLang, data.collapseAt).catch(function(err){ alert("Import failed: " + (err && err.message)); });
       }
     });
   };
@@ -1114,7 +1271,7 @@ function loadSessions(){
       const msgs = (val[id] && val[id].messages) || null;
       let lastTs = 0;
       if(msgs){ for(const k in msgs){ const t = msgs[k] && msgs[k].ts; if(t && t > lastTs) lastTs = t; } }
-      sessionMeta[id] = { name: meta.name || "", createdAt: meta.createdAt || 0, allowCopy: meta.allowCopy === true, defaultLang: normalizeLang(meta.defaultLang) };
+      sessionMeta[id] = { name: meta.name || "", createdAt: meta.createdAt || 0, allowCopy: meta.allowCopy === true, defaultLang: normalizeLang(meta.defaultLang), collapseAt: normalizeCollapseAt(meta.collapseAt) };
       return { id: id, name: meta.name || "", createdAt: meta.createdAt || 0, lastTs: lastTs };
     });
     items.sort(function(a, b){ return b.createdAt - a.createdAt; });
@@ -1122,8 +1279,33 @@ function loadSessions(){
     updateHeading(); // reflect a rename into the active heading live
     syncAllowCopy(); // reflect an allow-copy change (e.g. from another tab)
     syncLang();
+    syncCollapse();
   });
 }
+
+/* --- Collapse threshold (per session: meta/collapseAt, missing = 20) --- */
+const collapseInput = document.getElementById("collapseInput");
+function syncCollapse(){
+  const v = (activeSession && sessionMeta[activeSession] && sessionMeta[activeSession].collapseAt) || COLLAPSE_DEFAULT;
+  if(document.activeElement !== collapseInput) collapseInput.value = v;
+  if(v !== collapseAt){ collapseAt = v; rerenderAll(stream); }
+}
+collapseInput.addEventListener("change", function(){
+  if(!activeSession) return;
+  const id = activeSession, prev = (sessionMeta[id] && sessionMeta[id].collapseAt) || COLLAPSE_DEFAULT;
+  const val = normalizeCollapseAt(collapseInput.value);
+  collapseInput.value = val;
+  sessionMeta[id] = sessionMeta[id] || {};
+  sessionMeta[id].collapseAt = val;
+  syncCollapse();
+  db.ref("sessions/" + id + "/meta/collapseAt").set(val === COLLAPSE_DEFAULT ? null : val)
+    .catch(function(err){
+      sessionMeta[id].collapseAt = prev;
+      syncCollapse();
+      alert("Could not change collapse setting: " + (err && err.message));
+    });
+});
+collapseInput.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); collapseInput.blur(); } });
 
 /* --- Default code language dropdown (per session: meta/defaultLang, missing = none) ---
    Bare ``` blocks are highlighted as this language on both pages. */
@@ -1271,6 +1453,7 @@ function openSession(id){
   updateHeading();
   syncAllowCopy();
   syncLang();
+  syncCollapse();
   sessionActions.style.display = "contents"; // reveal copy/export buttons
   mainEmpty.style.display = "none";
   stream.style.display = "flex";
@@ -1359,7 +1542,7 @@ document.getElementById("newSessionBtn").addEventListener("click", function(){
       const id = generateSessionCode();
       const meta = { createdAt: firebase.database.ServerValue.TIMESTAMP };
       if(name) meta.name = name;
-      sessionMeta[id] = { name: name, createdAt: Date.now(), allowCopy: false, defaultLang: "" };
+      sessionMeta[id] = { name: name, createdAt: Date.now(), allowCopy: false, defaultLang: "", collapseAt: COLLAPSE_DEFAULT };
       db.ref("sessions/" + id + "/meta").set(meta)
         .then(function(){ openSession(id); })
         .catch(function(err){ alert("Could not create session: " + (err && err.message)); });
@@ -1441,7 +1624,7 @@ function exportSession(format){
     const name = meta.name || "";
     if(format === "json"){
       const data = { session: id, name: name, createdAt: meta.createdAt || null,
-        allowCopy: meta.allowCopy === true, defaultLang: normalizeLang(meta.defaultLang) || null, exportedAt: Date.now(), messages: msgs };
+        allowCopy: meta.allowCopy === true, defaultLang: normalizeLang(meta.defaultLang) || null, collapseAt: normalizeCollapseAt(meta.collapseAt), exportedAt: Date.now(), messages: msgs };
       downloadFile("codeblocks-" + id + ".json", JSON.stringify(data, null, 2), "application/json");
     } else {
       downloadFile("codeblocks-" + id + ".md", buildMarkdown(id, name, meta.createdAt, msgs), "text/markdown;charset=utf-8");
@@ -1474,6 +1657,8 @@ function postMessage(asCode){
   }).then(function(){ composerInput.value = ""; composerInput.focus(); })
     .catch(function(err){ alert("Post failed: " + (err && err.message)); });
 }
+document.getElementById("expandAllBtn").addEventListener("click", function(){ setAllBlocks(stream, true); });
+document.getElementById("collapseAllBtn").addEventListener("click", function(){ setAllBlocks(stream, false); });
 document.getElementById("postBtn").addEventListener("click", function(){ postMessage(false); });
 document.getElementById("postCodeBtn").addEventListener("click", function(){ postMessage(true); });
 
