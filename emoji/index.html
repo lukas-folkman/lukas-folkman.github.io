@@ -37,6 +37,18 @@
     font-size: 1.3rem; opacity: 0; transition: opacity .2s; pointer-events: none;
   }
   #toast.show { opacity: 1; }
+  [hidden] { display: none !important; }
+  #searchbar {
+    position: sticky; top: 0; z-index: 5; background: #fafafa;
+    display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  }
+  #q {
+    flex: 1; max-width: 480px; font: inherit; font-size: 1.05rem;
+    padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; background: #fff;
+  }
+  #q:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+  #searchinfo { font-size: .85rem; color: #888; }
+  #resultsgrid .emoji:first-child { border-color: #cbd5e1; } /* Enter copies this one */
 </style>
 </head>
 <body>
@@ -45,7 +57,19 @@
   <h1>Emoji Copy Paste</h1>
   <p>A single click will copy the emoji into your clipboard, hold the shift key to copy multiple emojis</p>
 </header>
+
+<div id="searchbar">
+  <input id="q" type="text" placeholder="Search emojis  (⌘F / Ctrl+F, or just start typing)" autocomplete="off" spellcheck="false">
+  <span id="searchinfo"></span>
+</div>
 <hr>
+
+<div id="results" hidden>
+  <h2>Search results</h2>
+  <div id="resultsgrid" class="grid cat"></div>
+</div>
+
+<div id="main">
 
 <!-- ============================================================= -->
 <!-- EDIT YOUR FAVORITES HERE — just change the characters below.  -->
@@ -61,6 +85,8 @@
 <hr>
 
 <div id="categories"></div>
+
+</div><!-- #main -->
 
 <div id="toast">Copied!</div>
 
@@ -112,26 +138,163 @@ function graphemes(str) {
   return [...str];
 }
 
-function makeGrid(chars) {
+function makeTile(ch) {
+  const d = document.createElement("div");
+  d.className = "emoji";
+  d.textContent = ch;
+  d.title = ch;
+  d.addEventListener("click", e => copy(ch, d, e.shiftKey));
+  return d;
+}
+
+function makeGrid(chars, cat) {
   const grid = document.createElement("div");
   grid.className = "grid";
   const seen = new Set();
   for (const ch of graphemes(chars)) {
     if (seen.has(ch) || ch.trim() === "") continue;
     seen.add(ch);
-    const d = document.createElement("div");
-    d.className = "emoji";
-    d.textContent = ch;
-    d.title = ch;
-    d.addEventListener("click", e => copy(ch, d, e.shiftKey));
+    const d = makeTile(ch);
+    registerPage(ch, cat, d);
     grid.appendChild(d);
   }
   return grid;
 }
 
+// ---------- Search: Cmd/Ctrl+F or just start typing ----------
+// Names/keywords come from emojibase (CLDR labels + tags + GitHub shortcodes),
+// fetched at runtime so any emoji added to the lists above is searchable.
+// Offline fallback: only category names are searchable.
+const EMOJI_DATA = "https://cdn.jsdelivr.net/npm/emojibase-data@17.0.0/en/";
+const norm = s => s.replace(/[︎️]/g, "");   // ignore variation selectors
+const pageEmojis = new Map();   // norm(ch) -> {ch, cats: Set, tiles: []}
+let index = null;               // [{ch, label, words, text, rank, order}]
+let dataStatus = "Loading emoji names…";
+
+const qEl = document.getElementById("q");
+const infoEl = document.getElementById("searchinfo");
+const mainEl = document.getElementById("main");
+const resultsEl = document.getElementById("results");
+const resultsGrid = document.getElementById("resultsgrid");
+
+function registerPage(ch, cat, tile) {
+  const k = norm(ch);
+  let p = pageEmojis.get(k);
+  if (!p) pageEmojis.set(k, p = { ch, cats: new Set(), tiles: [] });
+  p.cats.add(cat);
+  p.tiles.push(tile);
+}
+
+const toWords = s => s.toLowerCase().split(/[^\p{L}\p{N}+]+/u).filter(Boolean);
+
+async function loadIndex() {
+  let data = [], codes = {};
+  try {
+    [data, codes] = await Promise.all([
+      fetch(EMOJI_DATA + "compact.json").then(r => r.json()),
+      fetch(EMOJI_DATA + "shortcodes/github.json").then(r => r.json()).catch(() => ({})),
+    ]);
+    dataStatus = "";
+  } catch (err) {
+    dataStatus = "Emoji names unavailable (offline?) — searching category names only";
+  }
+  const entries = new Map();
+  for (const e of data) {
+    if (e.group === undefined || e.group === 2) continue;  // skip components (skin tones, regional letters)
+    const sc = [].concat(codes[e.hexcode] || []);
+    entries.set(norm(e.unicode), {
+      ch: e.unicode, label: e.label, order: e.order ?? 1e6,
+      kw: [e.label, ...(e.tags || []), ...sc].join(" "),
+    });
+  }
+  for (const [k, p] of pageEmojis) {     // page emojis missing from the dataset
+    if (!entries.has(k)) entries.set(k, { ch: p.ch, label: "", order: 1e6, kw: "" });
+  }
+  index = [];
+  for (const [k, e] of entries) {
+    const p = pageEmojis.get(k);
+    const kw = e.kw + (p ? " " + [...p.cats].join(" ") : "");
+    const words = toWords(kw);
+    index.push({
+      ch: p ? p.ch : e.ch, label: e.label, order: e.order,
+      words, text: words.join(" "),
+      rank: !p ? 2 : p.cats.has("favourites") ? 0 : 1,   // favourites, then page, then rest
+    });
+    if (p && e.label) p.tiles.forEach(t => t.title = e.ch + "  " + e.label);
+  }
+  render();
+}
+
+function search(q) {
+  const toks = toWords(q);
+  if (!toks.length) return [];
+  const out = [];
+  for (const e of index) {
+    let score = 0;
+    for (const t of toks) {                 // every token must match: exact 3, prefix 2, substring 1
+      let s = 0;
+      for (const w of e.words) {
+        if (w === t) { s = 3; break; }
+        if (s < 2 && w.startsWith(t)) s = 2;
+      }
+      if (!s && e.text.includes(t)) s = 1;
+      if (!s) { score = 0; break; }
+      score += s;
+    }
+    if (score) out.push([score, e]);
+  }
+  out.sort((a, b) => b[0] - a[0] || a[1].rank - b[1].rank || a[1].order - b[1].order);
+  return out.map(x => x[1]);
+}
+
+function render() {
+  const active = qEl.value.trim() !== "";
+  mainEl.hidden = active;
+  resultsEl.hidden = !active;
+  if (!active) { infoEl.textContent = dataStatus; return; }
+  if (!index) { infoEl.textContent = dataStatus; resultsGrid.replaceChildren(); return; }
+  const res = search(qEl.value);
+  resultsGrid.replaceChildren(...res.map(e => {
+    const d = makeTile(e.ch);
+    if (e.label) d.title = e.ch + "  " + e.label;
+    return d;
+  }));
+  infoEl.textContent = (res.length ? res.length + " match" + (res.length > 1 ? "es" : "") +
+    " — Enter copies the first, Esc clears" : "No matches") + (dataStatus ? " · " + dataStatus : "");
+  window.scrollTo(0, 0);
+}
+
+qEl.addEventListener("input", render);
+
+document.addEventListener("keydown", e => {
+  const mod = e.metaKey || e.ctrlKey;
+  if (mod && !e.altKey && e.key.toLowerCase() === "f") {   // hijack browser find
+    e.preventDefault();
+    qEl.focus();
+    qEl.select();
+    return;
+  }
+  if (document.activeElement === qEl) {
+    if (e.key === "Escape") { qEl.value = ""; qEl.blur(); render(); }
+    else if (e.key === "Enter") {
+      const first = resultsGrid.firstElementChild;
+      if (first && !resultsEl.hidden) copy(first.textContent, first, e.shiftKey);
+    }
+    return;
+  }
+  if (e.key === "Escape" && qEl.value) { qEl.value = ""; render(); return; }
+  // Type-to-search: any printable key starts a fresh search.
+  if (!mod && !e.altKey && e.key.length === 1 && e.key !== " ") {
+    e.preventDefault();
+    qEl.value = e.key;
+    qEl.focus();
+    render();
+  }
+});
+
 // Favorites
 document.getElementById("favorites").replaceWith(
-  Object.assign(makeGrid(FAVORITES), { id: "favorites" })
+  Object.assign(makeGrid(FAVORITES, "favourites"), { id: "favorites" })
 );
 
 // Categories
@@ -139,10 +302,12 @@ const container = document.getElementById("categories");
 for (const [name, chars] of Object.entries(CATEGORIES)) {
   const h = document.createElement("h2");
   h.textContent = name;
-  const grid = makeGrid(chars);
+  const grid = makeGrid(chars, name);
   grid.classList.add("cat");
   container.append(h, grid);
 }
+
+loadIndex();
 </script>
 
 </body>
